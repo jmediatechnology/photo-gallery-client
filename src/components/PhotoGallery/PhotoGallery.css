@@ -1,0 +1,97 @@
+
+.photo-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    padding: 24px;
+}
+
+.photo-gallery-item {
+    border-radius: 12px;
+    overflow: hidden;
+    background: #222;                    /* keeps the card frame black */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;              /* ensures image + info stack properly */
+}
+
+.photo-gallery-item:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 32px rgba(0, 0, 0, 0.15);
+}
+
+.photo-gallery-item img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.photo-gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+/* Dark info panel with #242424 background */
+.photo-gallery-item-info {
+    padding: 16px;
+    background-color: #242424;           /* solid dark background */
+    color: white;                        /* all text white */
+    flex-grow: 1;                        /* pushes content nicely in flex layout */
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+.photo-gallery-item-info .title {
+    margin: 0 0 8px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: white;                        /* explicit white */
+}
+
+.photo-gallery-item-info .description {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.85);     /* slightly soft white for better readability */
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.photo-gallery-actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.photo-gallery-actions button {
+    flex: 1;
+    font-weight: 600;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-family: inherit;
+    background-color: #1a1a1a;
+    cursor: pointer;
+}
+.photo-gallery-actions button:hover {
+    border-color: #646cff;
+}
+.photo-gallery-actions button:hover:first-child {
+    border-bottom-left-radius: 12px;
+}
+.photo-gallery-actions button:hover:last-child {
+    border-bottom-right-radius: 12px;
+}
+.photo-gallery-actions button:focus,
+.photo-gallery-actions button:focus-visible {
+    outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .photo-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        padding: 16px;
+        gap: 16px;
+    }
+}

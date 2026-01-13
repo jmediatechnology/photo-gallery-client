@@ -1,0 +1,54 @@
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333;
+    color: #fff;
+    margin: 24px 24px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-radius: 12px;
+}
+
+.navbar-left {
+    display: flex;
+    align-items: center;           /* vertically center */
+    justify-content: center;       /* horizontally center - optional */
+    padding-left: 3em;
+    color: #fff;
+    text-decoration: none;
+}
+
+.navbar-left .logo {
+    display: flex;
+    align-items: center;           /* vertically center */
+    justify-content: center;       /* horizontally center - optional */
+    color: #fff;
+    text-decoration: none;
+}
+
+.navbar-left .logo img {
+    height: 100%;                  /* fills the div height */
+    width: auto;                   /* keeps aspect ratio */
+    object-fit: contain;           /* or cover, if you don't mind cropping */
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    padding-right: 3em;
+}
+
+.nav-links {
+    list-style-type: none;
+    display: flex;
+}
+
+.nav-links li {
+    margin-right: 1rem;
+}
+
+.nav-links a {
+    color: #fff;
+    text-decoration: none;
+}

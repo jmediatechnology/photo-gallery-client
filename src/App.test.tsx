@@ -1,34 +1,22 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import App from "./App";
+import { getPhotographs } from "./api/client";
+import { vi, type Mock } from "vitest";
 
-describe("App Component", () => {
-    it("renders both logos and the main heading", () => {
-        render(<App />);
+vi.mock("./api/client", () => ({
+    getPhotographs: vi.fn()
+}));
 
-        expect(screen.getByAltText("Vite logo")).toBeInTheDocument();
-        expect(screen.getByAltText("React logo")).toBeInTheDocument();
-        expect(screen.getByText(/Vite \+ React/i)).toBeInTheDocument();
+const mockedGetPhotographs = getPhotographs as Mock;
+
+describe("App", () => {
+    beforeEach(() => {
+        mockedGetPhotographs.mockResolvedValue([]);
     });
 
-    it("increments the counter when button is clicked", () => {
+    test("renders App and loads PhotoGallery", () => {
         render(<App />);
 
-        const button = screen.getByRole("button", { name: /count is/i });
-
-        expect(button).toHaveTextContent("count is 0");
-
-        fireEvent.click(button);
-        expect(button).toHaveTextContent("count is 1");
-
-        fireEvent.click(button);
-        expect(button).toHaveTextContent("count is 2");
-    });
-
-    it('displays the "learn more" paragraph correctly', () => {
-        render(<App />);
-
-        expect(
-            screen.getByText(/Click on the Vite and React logos to learn more/i)
-        ).toBeInTheDocument();
+        expect(screen.getByText(/Loading photographs.../i)).toBeInTheDocument();
     });
 });

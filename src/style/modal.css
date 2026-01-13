@@ -1,0 +1,215 @@
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    background: #111;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    color: #f1f1f1;
+    animation: slideUp 0.35s ease-out;
+}
+
+.padding-32 {
+    padding: 32px;
+}
+
+.modal-image {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    display: block;
+}
+
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    font-size: 32px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+/* wrapper for label and input */
+.modal-field {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    justify-content: space-between;
+}
+
+.modal-field label {
+    padding: 10px 14px;
+}
+
+.modal-field input {
+    min-width: 300px;
+    padding: 10px 14px;
+    color: #fff;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    background: #1a1a1a;
+    transition: border 0.2s, background 0.2s;
+}
+
+.modal-field button {
+    flex: 1;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.25s, transform 0.1s ease;
+}
+
+.modal-field button:hover {
+    background: #232323;
+}
+
+.modal-field button:active {
+    transform: scale(0.97);
+}
+
+.modal-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+    color: white;
+    padding: 40px 24px 24px;
+    text-align: center;
+}
+
+.modal-caption h2 {
+    margin: 0 0 10px;
+    font-size: 1.8rem;
+}
+
+.modal-caption p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+.modal-field button {
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: #1a1a1a;
+    cursor: pointer;
+    transition: border-color 0.25s;
+}
+.modal-field button:hover {
+    border-color: #646cff;
+}
+.modal-field button:focus,
+.modal-field button:focus-visible {
+    outline: 4px auto -webkit-focus-ring-color;
+}
+
+.modal-field-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    justify-content: flex-start;
+}
+
+.modal-field-column label {
+    padding: 10px 14px;
+    text-align: left;
+}
+
+.modal-field-column textarea {
+    min-width: 500px;
+    min-height: 150px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: #1a1a1a;
+    cursor: text;
+    transition: border-color 0.25s;
+}
+
+.modal-actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.modal-actions button {
+    flex: 1;
+    font-weight: 600;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-family: inherit;
+    background-color: #1a1a1a;
+    cursor: pointer;
+}
+.modal-actions button:hover {
+    border-color: #646cff;
+}
+.modal-actions button:focus,
+.modal-actions button:focus-visible {
+    outline: 4px auto -webkit-focus-ring-color;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Subtle entrance animation */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .modal-caption h2 {
+        font-size: 1.4rem;
+    }
+}

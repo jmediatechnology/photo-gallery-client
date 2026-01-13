@@ -2,15 +2,14 @@ services:
   react-prod:
     build:
       context: .
-      dockerfile: Dockerfile
-    image: docker-reactjs-sample
+      dockerfile: docker/prod/Dockerfile
     ports:
       - "8080:8080"
 
   react-dev:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: docker/dev/Dockerfile
     ports:
       - "5173:5173"
     develop:
@@ -22,5 +21,5 @@ services:
   react-test:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: docker/dev/Dockerfile
     command: [ "npm", "run", "test" ]
