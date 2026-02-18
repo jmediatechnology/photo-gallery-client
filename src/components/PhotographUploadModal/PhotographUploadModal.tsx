@@ -18,6 +18,8 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
     const [description, setDescription] = React.useState('');
     const [file, setFile] = React.useState<File | null>(null);
     const [error, setError] = React.useState<string | null>(null);
+    const [validationErrorUUID, setValidationErrorUUID] = React.useState<string | null>(null);
+    const [validationErrorTitle, setValidationErrorTitle] = React.useState<string | null>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -60,8 +62,18 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
                         id="uuid"
                         className=""
                         value={uuid}
-                        onChange={(e) => setUuid(e.target.value)}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            setValidationErrorUUID(null);
+                            if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) {
+                                setValidationErrorUUID('Invalid UUID');
+                            }
+                            setUuid(value)}
+                        }
                     />
+                    {validationErrorUUID && (
+                        <p style={{ color: "red", fontSize: "14px" }}>{validationErrorUUID}</p>
+                    )}
                 </div>
                 <div className="modal-field">
                     <label htmlFor="title" className="">Title</label>
@@ -70,7 +82,17 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
                         id="title"
                         className=""
                         onChange={(e) => setTitle(e.target.value)}
+                        onBlur={(e) => {
+                            const value = e.target.value;
+                            setValidationErrorTitle(null);
+                            if (value === "") {
+                                setValidationErrorTitle('Title is required');
+                            }
+                        }}
                     />
+                    {validationErrorTitle && (
+                        <p style={{ color: "red", fontSize: "14px" }}>{validationErrorTitle}</p>
+                    )}
                 </div>
                 <div className="modal-field-column">
                     <label htmlFor="description" className="">Description</label>
