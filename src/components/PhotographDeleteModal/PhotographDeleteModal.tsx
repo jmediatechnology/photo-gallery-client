@@ -17,7 +17,7 @@ export const PhotographDeleteModal: React.FC<PhotographModalProps> = ({ photo, o
     const { removePhotograph } = usePhotographs();
     const [error, setError] = React.useState<string | null>(null);
 
-    const handleDelete = async(photograph: PhotographDTO) => {
+    const handleDelete = (photograph: PhotographDTO) => {
 
         if (!token) {
             return;

@@ -28,7 +28,7 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
         }
     };
 
-    const handleUpload = async() => {
+    const handleUpload = () => {
 
         if (!token) {
             return;

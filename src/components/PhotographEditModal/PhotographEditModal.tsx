@@ -20,7 +20,7 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
 
     const [error, setError] = React.useState<string | null>(null);
 
-    const handleEdit = async() => {
+    const handleEdit = () => {
 
         if (!token) {
             return;
