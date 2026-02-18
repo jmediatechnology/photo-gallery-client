@@ -20,6 +20,7 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
     const [error, setError] = React.useState<string | null>(null);
     const [validationErrorUUID, setValidationErrorUUID] = React.useState<string | null>(null);
     const [validationErrorTitle, setValidationErrorTitle] = React.useState<string | null>(null);
+    const [validationErrorFile, setValidationErrorFile] = React.useState<string | null>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -33,7 +34,13 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
             return;
         }
 
+        if (title.length === 0) {
+            setValidationErrorTitle('Title is required');
+            return;
+        }
+
         if (!file) {
+            setValidationErrorFile('No file specified');
             return;
         }
 
@@ -109,8 +116,14 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
                         type="file"
                         id="file"
                         className=""
-                        onChange={handleFileChange}
+                        onChange={(e) => {
+                            setValidationErrorFile(null);
+                            handleFileChange(e);
+                        }}
                     />
+                    {validationErrorFile && (
+                        <p style={{ color: "red", fontSize: "14px" }}>{validationErrorFile}</p>
+                    )}
                 </div>
 
                 {error && (
