@@ -8,12 +8,22 @@ import {PhotographDeleteModal} from "../PhotographDeleteModal/PhotographDeleteMo
 import {PhotographEditModal} from "../PhotographEditModal/PhotographEditModal.tsx";
 import {usePhotographs} from "../../photograph/PhotographContext.tsx";
 import {Photograph} from "../Photograph/Photograph.tsx";
+import {useKeyboardNavigation} from "../../hooks/useKeyboardNavigation.tsx";
 
 export const PhotoGallery = () => {
     const {photographs, isLoading, error} = usePhotographs();
-    const [selectedPhoto, setSelectedPhoto] = React.useState<PhotographDTO | null>(null);
+    const [selectedPhoto, setSelectedPhoto] = React.useState<PhotographDTO | null | undefined>(null);
     const [selectedPhotoToBeDeleted, setSelectedPhotoToBeDeleted] = React.useState<PhotographDTO | null>(null);
     const [selectedPhotoToBeEdited, setSelectedPhotoToBeEdited] = React.useState<PhotographDTO | null>(null);
+
+    const selectedPhotoIndex: number = photographs.findIndex((element: PhotographDTO) => {
+        return element.uuid === selectedPhoto?.uuid;
+    });
+
+    useKeyboardNavigation(
+        () => setSelectedPhoto(photographs.getNext(selectedPhotoIndex)),
+        () => setSelectedPhoto(photographs.getPrev(selectedPhotoIndex))
+    );
 
     if (isLoading) {
         return (
@@ -46,7 +56,10 @@ export const PhotoGallery = () => {
             </div>
 
             {selectedPhoto && (
-                <PhotographModal photo={selectedPhoto} onClose={() => setSelectedPhoto(null)} />
+                <PhotographModal
+                    photo={selectedPhoto}
+                    onClose={() => setSelectedPhoto(null)}
+                />
             )}
 
             {selectedPhotoToBeDeleted && (

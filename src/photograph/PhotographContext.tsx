@@ -2,9 +2,10 @@ import {createContext, useContext} from "react";
 import * as React from "react";
 import {getPhotographs} from "../api/client.ts";
 import type {PhotographDTO} from "../types";
+import { CircularArray } from "../data-structures/CircularArray.ts";
 
 interface PhotographContextInterface {
-    photographs: PhotographDTO[],
+    photographs: CircularArray<PhotographDTO>,
     isLoading: boolean,
     error: string,
     addPhotograph: (response: PhotographDTO) => void,
@@ -15,14 +16,14 @@ interface PhotographContextInterface {
 const PhotographContext = createContext<PhotographContextInterface | undefined>(undefined);
 
 export const PhotographProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [photographs, setPhotographs] = React.useState<PhotographDTO[]>([]);
+    const [photographs, setPhotographs] = React.useState<CircularArray<PhotographDTO>>(new CircularArray());
     const [isLoading, setIsLoading] = React.useState(true);
     const [error, setError] = React.useState('');
 
     React.useEffect(() => {
         getPhotographs()
             .then((response: PhotographDTO[]) => {
-                setPhotographs(response);
+                setPhotographs(CircularArray.from(response));
             })
             .catch((response) => {
                 if(response instanceof Error) {
@@ -38,24 +39,24 @@ export const PhotographProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }, []);
 
     const addPhotograph = (response: PhotographDTO) => {
-        setPhotographs([response, ...photographs]);
+        setPhotographs(CircularArray.from([response, ...photographs]));
     };
 
     const editPhotograph = (response: PhotographDTO) => {
-        const newPhotographs = photographs.reduce<PhotographDTO[]>((accumulator, currentValue: PhotographDTO) => {
-            if (currentValue.uuid === response.uuid) {
-                accumulator.push(response);
+        const newPhotographs = photographs.reduce<CircularArray<PhotographDTO>>(
+            (accumulator, current) => {
+                accumulator.push(current.uuid === response.uuid ? response : current);
                 return accumulator;
-            }
-            accumulator.push(currentValue);
-            return accumulator;
-        }, []);
+            },
+            new CircularArray()
+        );
         setPhotographs(newPhotographs);
     };
 
     const removePhotograph = (uuid: string) => {
-        const photographsWithoutPhoto = photographs.filter((photograph: PhotographDTO) => photograph.uuid !== uuid);
-        setPhotographs(photographsWithoutPhoto)
+        setPhotographs(CircularArray.from(
+            photographs.filter((photograph: PhotographDTO) => photograph.uuid !== uuid)
+        ));
     };
 
     return (
