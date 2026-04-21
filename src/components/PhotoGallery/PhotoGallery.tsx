@@ -45,8 +45,9 @@ export const PhotoGallery = () => {
     return (
         <>
             <div className="photo-gallery">
-                {photographs.map((photograph) => (
+                {photographs.map((photograph: PhotographDTO, index: number) => (
                     <Photograph
+                        key={index}
                         photograph={photograph}
                         onSelect={setSelectedPhoto}
                         onSelectForEdit={setSelectedPhotoToBeEdited}
@@ -56,10 +57,15 @@ export const PhotoGallery = () => {
             </div>
 
             {selectedPhoto && (
-                <PhotographModal
-                    photo={selectedPhoto}
-                    onClose={() => setSelectedPhoto(null)}
-                />
+                <>
+                    <PhotographModal
+                        photo={selectedPhoto}
+                        onClose={() => setSelectedPhoto(null)}
+                        onSelect={setSelectedPhoto}
+                    >
+                    </PhotographModal>
+                </>
+
             )}
 
             {selectedPhotoToBeDeleted && (

@@ -1,0 +1,10 @@
+
+.modal-footer {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+.modal-footer img {
+    max-height: 15vh;
+    object-fit: contain;
+}

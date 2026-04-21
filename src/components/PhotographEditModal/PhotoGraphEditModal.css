@@ -1,5 +1,5 @@
 
-.modal-overlay-show {
+.modal-overlay-edit {
     position: fixed;
     top: 0;
     left: 0;
@@ -7,14 +7,20 @@
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.85);
     display: flex;
+    align-items: center;
     justify-content: center;
     z-index: 1000;
     animation: fadeIn 0.3s ease-out;
 }
 
-.modal-content-show {
+
+.modal-content-edit {
     position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
     overflow: visible;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     gap: 20px;

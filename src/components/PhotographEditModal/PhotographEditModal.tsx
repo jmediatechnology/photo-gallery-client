@@ -4,6 +4,7 @@ import {patchPhotograph} from "../../api/client.ts";
 import {useAuth} from "../../auth/AuthContext.tsx";
 import {usePhotographs} from "../../photograph/PhotographContext.tsx";
 import {useEscape} from "../../hooks/useEscape.tsx";
+import './PhotoGraphEditModal.css';
 
 interface PhotographEditModalProps {
     photo: PhotographDTO,
@@ -41,8 +42,8 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose} data-testid="modal-overlay">
-            <div className="modal-content padding-32" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay-edit" onClick={onClose} data-testid="modal-overlay">
+            <div className="modal-content-edit background-black padding-32" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-field">
                     <label htmlFor="uuid" className="">UUID</label>
                     <input

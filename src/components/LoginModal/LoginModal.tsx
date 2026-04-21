@@ -1,6 +1,7 @@
 import * as React from "react";
 import {postLogin} from "../../api/client.ts";
 import {useAuth} from "../../auth/AuthContext.tsx";
+import './loginModal.css'
 
 interface LoginModalProps {
     onClose: () => void
@@ -28,8 +29,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({onClose}) => {
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose} data-testid="modal-overlay">
-            <div className="modal-content padding-32" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay-login" onClick={onClose} data-testid="modal-overlay">
+            <div className="modal-content-login background-black padding-32" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-field">
                         <label htmlFor="username" className="">Username</label>
                         <input

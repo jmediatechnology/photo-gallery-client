@@ -46,6 +46,10 @@ describe('CircularArray', () => {
         it('should handle a -1 offset', () => {
             expect(users.getNext(-1)).toEqual({ name: 'Harry' }); // -1 wraps to Voldemort, next is Harry
         });
+
+        it('should give undefined when dealing with empty array', () => {
+            expect(CircularArray.from([]).getNext(0)).toBeUndefined();
+        });
     });
 
     describe('getPrev()', () => {
@@ -66,6 +70,26 @@ describe('CircularArray', () => {
 
         it('should handle a -1 offset', () => {
             expect(users.getPrev(-1)).toEqual({ name: 'Severus' }); // -1 wraps to Voldemort, prev is Severus
+        });
+
+        it('should give undefined when dealing with empty array', () => {
+            expect(CircularArray.from([]).getPrev(0)).toBeUndefined();
+        });
+    });
+
+    describe('uniq()', () => {
+
+        const usersWithDuplicates: CircularArray<User> = CircularArray.from([
+            { name: 'Harry' },
+            { name: 'Harry' },
+            { name: 'Ron' },
+            { name: 'Ron' },
+            { name: 'Hermione' },
+            { name: 'Hermione' },
+        ]);
+
+        it('removes duplicates', () => {
+            expect(usersWithDuplicates.uniq()).toHaveLength(3);
         });
     });
 

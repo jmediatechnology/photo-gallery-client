@@ -5,6 +5,7 @@ import {useAuth} from "../../auth/AuthContext.tsx";
 import {deletePhotograph} from "../../api/client.ts";
 import {usePhotographs} from "../../photograph/PhotographContext.tsx";
 import {useEscape} from "../../hooks/useEscape.tsx";
+import './PhotographDeleteModal.css';
 
 interface PhotographModalProps {
     photo: PhotographDTO;
@@ -38,10 +39,10 @@ export const PhotographDeleteModal: React.FC<PhotographModalProps> = ({ photo, o
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose} data-testid="modal-overlay">
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay-delete" onClick={onClose} data-testid="modal-overlay">
+            <div className="modal-content-delete background-black padding-32" onClick={(e) => e.stopPropagation()}>
 
-                <h2>Are you sure you want to delete it?</h2>
+                <h2>Delete {photo.title}?</h2>
 
                 <img
                     src={api.url(photo.filePath)}

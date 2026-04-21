@@ -175,4 +175,56 @@ describe("PhotoGallery", () => {
             expect(screen.getAllByText('Sunset')).toHaveLength(1);
         });
     });
+
+    test('shows thumbnail footer when clicked on photograph', async() => {
+        mockedGetPhotographs.mockResolvedValue([
+            {
+                uuid: "1",
+                title: "Sunset",
+                description: "Beautiful sunset",
+                filePath: "/images/sunset.jpg"
+            },
+            {
+                uuid: "2",
+                title: "Night",
+                description: "Beautiful night",
+                filePath: "/images/beautiful_night.jpg"
+            },
+            {
+                uuid: "3",
+                title: "Morning",
+                description: "Beautiful morning",
+                filePath: "/images/beautiful_morning.jpg"
+            },
+        ]);
+
+        const { container } = render(
+            <AuthProvider>
+                <PhotographProvider>
+                    <PhotoGallery />
+                </PhotographProvider>
+            </AuthProvider>
+        );
+
+        await waitFor(() =>
+            expect(screen.queryByText(/Loading photographs.../i)).not.toBeInTheDocument()
+        );
+
+        expect(screen.queryByTestId('modal-overlay')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('thumbnail-footer')).not.toBeInTheDocument();
+
+        expect(screen.getAllByRole('img', {name: 'Night'})).toHaveLength(1);
+
+        fireEvent.click(screen.getByRole('img', { name: "Night" }));
+        await waitFor(() => {
+            expect(screen.queryByTestId('thumbnail-footer')).toBeInTheDocument();
+            expect(screen.getAllByRole('img', {name: 'Night'})).toHaveLength(3);
+        });
+
+        fireEvent.keyDown(container, {key: 'Escape', code: 'Escape'})
+        await waitFor(() => {
+            expect(screen.queryByTestId('thumbnail-footer')).not.toBeInTheDocument();
+            expect(screen.getAllByRole('img', {name: 'Night'})).toHaveLength(1);
+        });
+    });
 });

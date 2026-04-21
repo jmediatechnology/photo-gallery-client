@@ -27,6 +27,6 @@ describe('PhotographDeleteModal', () => {
             </AuthProvider>
         );
 
-        expect(screen.getByText('Are you sure you want to delete it?')).toBeInTheDocument();
+        expect(screen.getByText('Delete Summer Beach?')).toBeInTheDocument();
     });
 })

@@ -1,13 +1,22 @@
 import {fireEvent, render, screen} from "@testing-library/react";
 import {PhotographModal} from "./PhotographModal.tsx";
-import {vi} from "vitest";
+import {afterEach, type Mock, vi} from "vitest";
 import type {PhotographDTO} from "../../types";
+import {getPhotographs} from "../../api/client";
+import {AuthProvider} from "../../auth/AuthContext.tsx";
+import {PhotographProvider} from "../../photograph/PhotographContext.tsx";
+
+vi.mock("../../api/client", () => ({
+    getPhotographs: vi.fn()
+}));
 
 vi.mock("../../api/config", () => ({
     api: {
         url: (path: string) => `https://test.com${path}`
     }
 }));
+
+const mockedGetPhotographs = getPhotographs as Mock;
 
 const mockPhoto = {
     uuid: '123',
@@ -19,15 +28,27 @@ const mockPhoto = {
 } satisfies PhotographDTO;
 
 const mockOnClose = vi.fn();
+const mockOnSelect = vi.fn();
 
 describe('PhotographModal', () => {
 
     beforeEach(() => {
+        mockedGetPhotographs.mockResolvedValue([]);
+    });
+
+    afterEach(() => {
         vi.clearAllMocks();
     });
 
     it('renders the image with correct src and alt text', () => {
-        render(<PhotographModal photo={mockPhoto} onClose={mockOnClose} />);
+
+        render(
+            <AuthProvider>
+                <PhotographProvider>
+                    <PhotographModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
+                </PhotographProvider>
+            </AuthProvider>
+        );
 
         const img = screen.getByAltText(mockPhoto.title);
         expect(img).toBeInTheDocument();
@@ -36,7 +57,13 @@ describe('PhotographModal', () => {
     });
 
     it('displays title and description', () => {
-        render(<PhotographModal photo={mockPhoto} onClose={mockOnClose} />);
+        render(
+            <AuthProvider>
+                <PhotographProvider>
+                    <PhotographModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
+                </PhotographProvider>
+            </AuthProvider>
+        );
 
         expect(screen.getByRole('heading', { name: mockPhoto.title })).toBeInTheDocument();
         expect(screen.getByText(mockPhoto.description)).toBeInTheDocument();
@@ -44,14 +71,27 @@ describe('PhotographModal', () => {
 
     it('does not render description paragraph when description is missing', () => {
         const photoNoDesc = { ...mockPhoto, description: undefined } as PhotographDTO;
-        render(<PhotographModal photo={photoNoDesc} onClose={mockOnClose} />);
+
+        render(
+            <AuthProvider>
+                <PhotographProvider>
+                    <PhotographModal photo={photoNoDesc} onClose={mockOnClose} onSelect={mockOnSelect} />
+                </PhotographProvider>
+            </AuthProvider>
+        );
 
         expect(screen.getByRole('heading', { name: mockPhoto.title })).toBeInTheDocument();
         expect(screen.queryByText(mockPhoto.description)).not.toBeInTheDocument();
     });
 
     it('calls onClose when clicking the overlay (outside modal-content)', () => {
-        render(<PhotographModal photo={mockPhoto} onClose={mockOnClose} />);
+        render(
+            <AuthProvider>
+                <PhotographProvider>
+                    <PhotographModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
+                </PhotographProvider>
+            </AuthProvider>
+        );
 
         fireEvent.click(screen.getByTestId('modal-overlay') ?? document.querySelector('.modal-overlay')!);
 
@@ -59,21 +99,39 @@ describe('PhotographModal', () => {
     });
 
     it('does NOT call onClose when clicking inside modal-content', () => {
-        render(<PhotographModal photo={mockPhoto} onClose={mockOnClose} />);
+        render(
+            <AuthProvider>
+                <PhotographProvider>
+                    <PhotographModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
+                </PhotographProvider>
+            </AuthProvider>
+        );
 
         fireEvent.click(screen.getByAltText(mockPhoto.title));
         expect(mockOnClose).not.toHaveBeenCalled();
     });
 
     it('calls onClose when Escape key is pressed', () => {
-        render(<PhotographModal photo={mockPhoto} onClose={mockOnClose} />);
+        render(
+            <AuthProvider>
+                <PhotographProvider>
+                    <PhotographModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
+                </PhotographProvider>
+            </AuthProvider>
+        );
 
         fireEvent.keyDown(window, { key: 'Escape' });
         expect(mockOnClose).toHaveBeenCalledTimes(1);
     });
 
     it('does not call onClose for other keys', () => {
-        render(<PhotographModal photo={mockPhoto} onClose={mockOnClose} />);
+        render(
+            <AuthProvider>
+                <PhotographProvider>
+                    <PhotographModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
+                </PhotographProvider>
+            </AuthProvider>
+        );
 
         fireEvent.keyDown(window, { key: 'Enter' });
         fireEvent.keyDown(window, { key: 'a' });
@@ -84,7 +142,13 @@ describe('PhotographModal', () => {
         const addSpy = vi.spyOn(window, 'addEventListener');
         const removeSpy = vi.spyOn(window, 'removeEventListener');
 
-        const { unmount } = render(<PhotographModal photo={mockPhoto} onClose={mockOnClose} />);
+        const { unmount } = render(
+            <AuthProvider>
+                <PhotographProvider>
+                    <PhotographModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
+                </PhotographProvider>
+            </AuthProvider>
+        );
 
         expect(addSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
 
