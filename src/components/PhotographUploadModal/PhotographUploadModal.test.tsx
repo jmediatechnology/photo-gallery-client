@@ -18,5 +18,7 @@ describe('PhotographUploadModal', () => {
 
         expect(screen.getByText('Title')).toBeInTheDocument();
         expect(screen.getByText('Description')).toBeInTheDocument();
+        expect(screen.getByTestId('muli-file-upload-input-element')).toHaveAttribute('multiple');
+        expect(screen.getByRole('button', { name: 'Upload' })).toBeInTheDocument();
     });
 });
