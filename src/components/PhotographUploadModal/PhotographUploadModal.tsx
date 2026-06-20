@@ -16,15 +16,15 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
     const [uuid, setUuid] = React.useState(crypto.randomUUID().toString());
     const [title, setTitle] = React.useState('');
     const [description, setDescription] = React.useState('');
-    const [file, setFile] = React.useState<File | null>(null);
+    const [files, setFiles] = React.useState<File[]>([]);
     const [error, setError] = React.useState<string | null>(null);
     const [validationErrorUUID, setValidationErrorUUID] = React.useState<string | null>(null);
     const [validationErrorTitle, setValidationErrorTitle] = React.useState<string | null>(null);
     const [validationErrorFile, setValidationErrorFile] = React.useState<string | null>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setFile(e.target.files[0]);
+        if (e.target.files) {
+            setFiles(Array.from(e.target.files));
         }
     };
 
@@ -39,23 +39,29 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
             return;
         }
 
-        if (!file) {
+        if (files.length === 0) {
             setValidationErrorFile('No file specified');
             return;
         }
 
-        postPhotograph({
-            token,
-            uuid,
-            title,
-            description,
-            file,
-        }).then((response: PhotographDTO) => {
-            addPhotograph(response);
+        Promise.all(
+            files.map(
+                async (file: File, index: number) => {
+                    const response: PhotographDTO = await postPhotograph({
+                        token,
+                        uuid: crypto.randomUUID(),
+                        title: index === 0 ? title : `${title} ${index}`,
+                        description,
+                        file
+                    });
+                    return addPhotograph(response);
+                }
+            )
+        ).then(() => {
             onClose();
         }).catch((err) => {
             console.error(err);
-            setError(err.response?.data?.message);
+            setError(err.response?.data?.message ?? err.response?.data?.title);
         });
     };
 
@@ -113,6 +119,7 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
                 <div className="modal-field">
                     <label htmlFor="file" className="">File</label>
                     <input
+                        data-testid="muli-file-upload-input-element"
                         type="file"
                         id="file"
                         className=""
@@ -120,6 +127,7 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
                             setValidationErrorFile(null);
                             handleFileChange(e);
                         }}
+                        multiple
                     />
                     {validationErrorFile && (
                         <p style={{ color: "red", fontSize: "14px" }}>{validationErrorFile}</p>
