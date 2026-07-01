@@ -1,10 +1,12 @@
 import * as React from "react";
 import type {PhotographDTO} from "../../types";
-import {patchPhotograph} from "../../api/client.ts";
+import {patchPhotograph, postGenerateDescription} from "../../api/client.ts";
 import {useAuth} from "../../auth/AuthContext.tsx";
 import {usePhotographs} from "../../photograph/PhotographContext.tsx";
 import {useEscape} from "../../hooks/useEscape.tsx";
 import './PhotoGraphEditModal.css';
+import type {DescriptionDTO} from "../../types/DescriptionDTO.ts";
+import {HiOutlineSparkles} from "react-icons/hi2";
 
 interface PhotographEditModalProps {
     photo: PhotographDTO,
@@ -35,6 +37,23 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
         }).then((response: PhotographDTO) => {
             editPhotograph(response);
             onClose();
+        }).catch((err) => {
+            console.error(err);
+            setError(err.response?.data?.message);
+        });
+    };
+
+    const handleGenerateDescription = () => {
+
+        if (!token) {
+            return;
+        }
+
+        postGenerateDescription({
+            token,
+            uuid,
+        }).then((response: DescriptionDTO) => {
+            setDescription(response.description);
         }).catch((err) => {
             console.error(err);
             setError(err.response?.data?.message);
@@ -77,6 +96,10 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
                 {error && (
                     <div style={{ color: "red", fontSize: "14px" }}>{error}</div>
                 )}
+
+                <div className="modal-actions">
+                    <button onClick={() => handleGenerateDescription()}><HiOutlineSparkles />Generate description</button>
+                </div>
 
                 <div className="modal-actions">
                     <button onClick={() => handleEdit()}>Update</button>

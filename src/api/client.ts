@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { api } from './config';
 import type {PhotographDTO} from "../types";
+import type {DescriptionDTO} from "../types/DescriptionDTO.ts";
 
 let cachedToken: string | null = null;
 
@@ -102,6 +103,25 @@ export const patchPhotograph = async({token, uuid, title, description}: editPhot
     const response = await axios.patch(
         api.url(`/photographs/${uuid}`),
         {title, description},
+        {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            }
+        }
+    )
+
+    return response.data;
+}
+
+interface postGenerateDescriptionInput {
+    token: string,
+    uuid: string,
+}
+
+export const postGenerateDescription = async({token, uuid}: postGenerateDescriptionInput): Promise<DescriptionDTO> => {
+    const response = await axios.post(
+        api.url(`/photographs/${uuid}/generate-description`),
+        {},
         {
             headers: {
                 'Authorization': `Bearer ${token}`,
