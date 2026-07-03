@@ -63,6 +63,18 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
     return (
         <div className="modal-overlay-edit" onClick={onClose} data-testid="modal-overlay">
             <div className="modal-content-edit background-black padding-32" onClick={(e) => e.stopPropagation()}>
+
+                <div className="modal-header">
+                    <h2>{photo.title}</h2>
+                    <button
+                        className="modal-close"
+                        onClick={onClose}
+                        aria-label="Close"
+                    >
+                        &times;
+                    </button>
+                </div>
+
                 <div className="modal-field">
                     <label htmlFor="uuid" className="">UUID</label>
                     <input

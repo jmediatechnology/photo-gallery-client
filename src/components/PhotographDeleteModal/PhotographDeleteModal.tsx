@@ -42,7 +42,16 @@ export const PhotographDeleteModal: React.FC<PhotographModalProps> = ({ photo, o
         <div className="modal-overlay-delete" onClick={onClose} data-testid="modal-overlay">
             <div className="modal-content-delete background-black padding-32" onClick={(e) => e.stopPropagation()}>
 
-                <h2>Delete {photo.title}?</h2>
+                <div className="modal-header">
+                    <h2>Delete {photo.title}?</h2>
+                    <button
+                        className="modal-close"
+                        onClick={onClose}
+                        aria-label="Close"
+                    >
+                        &times;
+                    </button>
+                </div>
 
                 <img
                     src={api.url(photo.filePath)}

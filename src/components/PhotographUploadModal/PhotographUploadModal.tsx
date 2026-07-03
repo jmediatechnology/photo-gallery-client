@@ -68,6 +68,16 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
     return (
         <div className="modal-overlay" onClick={onClose} data-testid="modal-overlay">
             <div className="modal-content padding-32" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>Upload</h2>
+                    <button
+                        className="modal-close"
+                        onClick={onClose}
+                        aria-label="Close"
+                    >
+                        &times;
+                    </button>
+                </div>
                 <div className="modal-field">
                     <label htmlFor="uuid" className="">UUID</label>
                     <input

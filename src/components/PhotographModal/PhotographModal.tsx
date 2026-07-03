@@ -26,8 +26,15 @@ export const PhotographModal: React.FC<PhotographModalProps> = ({ photo, onClose
         <div className="modal-overlay-show" onClick={onClose} data-testid="modal-overlay">
             <div className="modal-content-show background-black" onClick={(e) => e.stopPropagation()}>
 
-                <div>
+                <div className="modal-header">
                     <h2>{photo.title}</h2>
+                    <button
+                        className="modal-close"
+                        onClick={onClose}
+                        aria-label="Close"
+                    >
+                        &times;
+                    </button>
                 </div>
 
                 <img
