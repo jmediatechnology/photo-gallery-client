@@ -124,6 +124,5 @@ describe('PhotographDeleteModal', () => {
             expect(mockRemovePhotograph).toHaveBeenCalledWith(mockPhoto.uuid);
             expect(mockOnClose).toHaveBeenCalledTimes(1);
         });
-
     });
 });
