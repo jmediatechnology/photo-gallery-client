@@ -170,9 +170,9 @@ describe('PhotographUploadModal', () => {
 
         // Deliberately resolve out of order to prove Promise.all waits for both,
         // regardless of which underlying request finishes first.
-        let resolveFirst: (value: PhotographDTO) => void;
+        let promiseResolver1: (value: PhotographDTO) => void;
         const firstCallPromise = new Promise<PhotographDTO>((resolve) => {
-            resolveFirst = resolve;
+            promiseResolver1 = resolve;
         });
 
         mockedPostPhotograph
@@ -200,7 +200,7 @@ describe('PhotographUploadModal', () => {
 
         expect(mockOnClose).not.toHaveBeenCalled();
 
-        resolveFirst!(photo1);
+        promiseResolver1!(photo1);
 
         await waitFor(() => {
             expect(mockAddPhotograph).toHaveBeenCalledTimes(2);
