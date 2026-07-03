@@ -17,8 +17,12 @@ describe('LoginModal', () => {
             </AuthProvider>
         );
 
-        expect(screen.getByText('Username')).toBeInTheDocument();
-        expect(screen.getByText('Password')).toBeInTheDocument();
-        expect(screen.getByText('Login')).toBeInTheDocument();
+        const usernameInput = screen.getByRole('textbox', { name: /username/i });
+        const passwordInput = screen.getByLabelText(/password/i);
+        const heading = screen.getByRole('heading', { name: 'Login' });
+
+        expect(usernameInput).toBeInTheDocument();
+        expect(passwordInput).toBeInTheDocument();
+        expect(heading).toBeInTheDocument();
     });
 })
