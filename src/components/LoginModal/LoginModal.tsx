@@ -31,6 +31,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({onClose}) => {
     return (
         <div className="modal-overlay-login" onClick={onClose} data-testid="modal-overlay">
             <div className="modal-content-login background-black padding-32" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                        <h2>Login</h2>
+                        <button
+                            className="modal-close"
+                            onClick={onClose}
+                            aria-label="Close"
+                        >
+                            &times;
+                        </button>
+                    </div>
                     <div className="modal-field">
                         <label htmlFor="username" className="">Username</label>
                         <input
