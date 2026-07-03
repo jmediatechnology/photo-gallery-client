@@ -1,7 +1,7 @@
 import {render, screen} from "@testing-library/react";
 import {NavBar} from "./NavBar.tsx";
 import {AuthProvider} from "../../auth/AuthContext.tsx";
-import {PhotographProvider} from "../../photograph/PhotographContext.tsx";
+import {PhotographProvider} from "../../context/PhotographContext.tsx";
 
 describe('NavBar', () => {
     test('NavBar', () => {

@@ -4,7 +4,7 @@ import * as React from "react";
 import type {PhotographDTO} from "../../types";
 import {useEscape} from "../../hooks/useEscape.tsx";
 import {ThumbnailFooter} from "../ThumbnailFooter/ThumbnailFooter.tsx";
-import {usePhotographs} from "../../photograph/PhotographContext.tsx";
+import {usePhotographs} from "../../context/PhotographContext.tsx";
 import './PhotographModal.css';
 
 interface PhotographModalProps {

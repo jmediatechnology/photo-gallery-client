@@ -4,7 +4,7 @@ import {PhotographEditModal} from "./PhotographEditModal.tsx";
 import {afterEach, type Mock, vi} from "vitest";
 import type {PhotographDTO} from "../../types";
 import {AuthProvider} from "../../auth/AuthContext.tsx";
-import {PhotographProvider} from "../../photograph/PhotographContext.tsx";
+import {PhotographProvider} from "../../context/PhotographContext.tsx";
 import {getPhotographs, patchPhotograph, postGenerateDescription} from '../../api/client';
 
 vi.mock(import('../../auth/AuthContext'), async (importOriginal) => {

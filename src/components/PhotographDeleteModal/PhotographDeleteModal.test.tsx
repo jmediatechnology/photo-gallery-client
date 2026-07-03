@@ -3,7 +3,7 @@ import {PhotographDeleteModal} from "./PhotographDeleteModal.tsx";
 import type {PhotographDTO} from "../../types";
 import {afterEach, type Mock, vi} from "vitest";
 import {AuthProvider} from "../../auth/AuthContext.tsx";
-import {PhotographProvider, usePhotographs} from "../../photograph/PhotographContext.tsx";
+import {PhotographProvider, usePhotographs} from "../../context/PhotographContext.tsx";
 import {deletePhotograph, getPhotographs} from "../../api/client.ts";
 
 vi.mock(import('../../auth/AuthContext'), async (importOriginal) => {
@@ -19,7 +19,7 @@ vi.mock(import('../../auth/AuthContext'), async (importOriginal) => {
     };
 });
 
-vi.mock(import('../../photograph/PhotographContext'), async (importOriginal) => {
+vi.mock(import('../../context/PhotographContext'), async (importOriginal) => {
     const actual = await importOriginal();
     return {
         ...actual,

@@ -2,7 +2,7 @@ import * as React from "react";
 import {postPhotograph} from "../../api/client.ts";
 import {useAuth} from "../../auth/AuthContext.tsx";
 import type {PhotographDTO} from "../../types";
-import {usePhotographs} from "../../photograph/PhotographContext.tsx";
+import {usePhotographs} from "../../context/PhotographContext.tsx";
 import {useEscape} from "../../hooks/useEscape.tsx";
 
 interface UploadModalProps {

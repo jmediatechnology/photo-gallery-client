@@ -3,7 +3,7 @@ import { PhotoGallery } from "./PhotoGallery";
 import { vi, type Mock } from "vitest";
 import { getPhotographs } from "../../api/client";
 import {AuthProvider} from "../../auth/AuthContext.tsx";
-import {PhotographProvider} from "../../photograph/PhotographContext.tsx";
+import {PhotographProvider} from "../../context/PhotographContext.tsx";
 
 vi.mock("../../api/client", () => ({
     getPhotographs: vi.fn()
@@ -81,7 +81,7 @@ describe("PhotoGallery", () => {
         );
     });
 
-    test('shows modal when clicked on photograph and closes when clicked escape', async() => {
+    test('shows modal when clicked on context and closes when clicked escape', async() => {
         mockedGetPhotographs.mockResolvedValue([
             {
                 uuid: "1",
@@ -128,7 +128,7 @@ describe("PhotoGallery", () => {
         });
     });
 
-    test('shows next photograph when pressed arrow right keyboard', async() => {
+    test('shows next context when pressed arrow right keyboard', async() => {
         mockedGetPhotographs.mockResolvedValue([
             {
                 uuid: "1",
@@ -176,7 +176,7 @@ describe("PhotoGallery", () => {
         });
     });
 
-    test('shows thumbnail footer when clicked on photograph', async() => {
+    test('shows thumbnail footer when clicked on context', async() => {
         mockedGetPhotographs.mockResolvedValue([
             {
                 uuid: "1",

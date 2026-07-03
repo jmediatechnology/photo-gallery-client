@@ -2,7 +2,7 @@ import './App.css'
 import {PhotoGallery} from "./components/PhotoGallery/PhotoGallery.tsx";
 import {NavBar} from "./components/NavBar/NavBar.tsx";
 import {AuthProvider} from "./auth/AuthContext.tsx";
-import {PhotographProvider} from "./photograph/PhotographContext.tsx";
+import {PhotographProvider} from "./context/PhotographContext.tsx";
 
 function App() {
 

@@ -6,7 +6,7 @@ import type { PhotographDTO } from "../../types";
 import {PhotographModal} from "../PhotographModal/PhotographModal.tsx";
 import {PhotographDeleteModal} from "../PhotographDeleteModal/PhotographDeleteModal.tsx";
 import {PhotographEditModal} from "../PhotographEditModal/PhotographEditModal.tsx";
-import {usePhotographs} from "../../photograph/PhotographContext.tsx";
+import {usePhotographs} from "../../context/PhotographContext.tsx";
 import {Photograph} from "../Photograph/Photograph.tsx";
 import {useKeyboardNavigation} from "../../hooks/useKeyboardNavigation.tsx";
 
