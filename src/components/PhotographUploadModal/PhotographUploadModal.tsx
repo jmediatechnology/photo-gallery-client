@@ -13,12 +13,10 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
     useEscape(onClose);
     const { token } = useAuth();
     const { addPhotograph } = usePhotographs();
-    const [uuid, setUuid] = React.useState(crypto.randomUUID().toString());
     const [title, setTitle] = React.useState('');
     const [description, setDescription] = React.useState('');
     const [files, setFiles] = React.useState<File[]>([]);
     const [error, setError] = React.useState<string | null>(null);
-    const [validationErrorUUID, setValidationErrorUUID] = React.useState<string | null>(null);
     const [validationErrorTitle, setValidationErrorTitle] = React.useState<string | null>(null);
     const [validationErrorFile, setValidationErrorFile] = React.useState<string | null>(null);
 
@@ -77,26 +75,6 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
                     >
                         &times;
                     </button>
-                </div>
-                <div className="modal-field">
-                    <label htmlFor="uuid" className="">UUID</label>
-                    <input
-                        type="text"
-                        id="uuid"
-                        className=""
-                        value={uuid}
-                        onChange={(e) => {
-                            const value = e.target.value;
-                            setValidationErrorUUID(null);
-                            if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) {
-                                setValidationErrorUUID('Invalid UUID');
-                            }
-                            setUuid(value)}
-                        }
-                    />
-                    {validationErrorUUID && (
-                        <p style={{ color: "red", fontSize: "14px" }}>{validationErrorUUID}</p>
-                    )}
                 </div>
                 <div className="modal-field">
                     <label htmlFor="title" className="">Title</label>
