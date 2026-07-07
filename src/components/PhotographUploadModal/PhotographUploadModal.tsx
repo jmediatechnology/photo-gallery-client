@@ -4,6 +4,7 @@ import {useAuth} from "../../auth/AuthContext.tsx";
 import type {PhotographDTO} from "../../types";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
 import {useEscape} from "../../hooks/useEscape.tsx";
+import {extractErrorMessage} from "../../api/error.ts";
 
 interface UploadModalProps {
     onClose: () => void
@@ -57,9 +58,8 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
             )
         ).then(() => {
             onClose();
-        }).catch((err) => {
-            console.error(err);
-            setError(err.response?.data?.message ?? err.response?.data?.title);
+        }).catch((response) => {
+            setError(extractErrorMessage(response, 'Failed to upload'));
         });
     };
 

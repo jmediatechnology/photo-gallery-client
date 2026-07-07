@@ -7,6 +7,7 @@ import {useEscape} from "../../hooks/useEscape.tsx";
 import './PhotoGraphEditModal.css';
 import type {DescriptionDTO} from "../../types/DescriptionDTO.ts";
 import {HiOutlineSparkles} from "react-icons/hi2";
+import {extractErrorMessage} from "../../api/error.ts";
 
 interface PhotographEditModalProps {
     photo: PhotographDTO,
@@ -38,9 +39,8 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
         }).then((response: PhotographDTO) => {
             editPhotograph(response);
             onClose();
-        }).catch((err) => {
-            console.error(err);
-            setError(err.response?.data?.message);
+        }).catch((response) => {
+            setError(extractErrorMessage(response, 'Failed to edit photograph'));
         });
     };
 
@@ -57,9 +57,8 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
             uuid,
         }).then((response: DescriptionDTO) => {
             setDescription(response.description);
-        }).catch((err) => {
-            console.error(err);
-            setError(err.response?.data?.message);
+        }).catch((response) => {
+            setError(extractErrorMessage(response, 'Failed to generate description'));
         }).finally(() => {
             setIsGenerating(false);
         });

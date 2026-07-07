@@ -3,6 +3,7 @@ import * as React from "react";
 import {getPhotographs} from "../api/client.ts";
 import type {PhotographDTO} from "../types";
 import { CircularArray } from "../data-structures/CircularArray.ts";
+import {extractErrorMessage} from "../api/error.ts";
 
 interface PhotographContextInterface {
     photographs: CircularArray<PhotographDTO>,
@@ -26,12 +27,7 @@ export const PhotographProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 setPhotographs(CircularArray.from(response));
             })
             .catch((response) => {
-                if(response instanceof Error) {
-                    setError(`${response.name}: ${response.message}`);
-                    return;
-                }
-
-                setError('Failed to load photographs')
+                setError(extractErrorMessage(response, 'Failed to get photographs'));
             })
             .finally(() => {
                 setIsLoading(false);

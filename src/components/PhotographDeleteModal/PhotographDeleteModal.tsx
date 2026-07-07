@@ -6,6 +6,7 @@ import {deletePhotograph} from "../../api/client.ts";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
 import {useEscape} from "../../hooks/useEscape.tsx";
 import './PhotographDeleteModal.css';
+import {extractErrorMessage} from "../../api/error.ts";
 
 interface PhotographModalProps {
     photo: PhotographDTO;
@@ -32,9 +33,8 @@ export const PhotographDeleteModal: React.FC<PhotographModalProps> = ({ photo, o
         }).then(() => {
             removePhotograph(uuid);
             onClose();
-        }).catch((err) => {
-            console.error(err);
-            setError(err.response?.data?.message);
+        }).catch((response) => {
+            setError(extractErrorMessage(response, 'Failed to delete photograph'));
         });
     };
 

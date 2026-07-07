@@ -2,6 +2,7 @@ import * as React from "react";
 import {postLogin} from "../../api/client.ts";
 import {useAuth} from "../../auth/AuthContext.tsx";
 import './loginModal.css'
+import {extractErrorMessage} from "../../api/error.ts";
 
 interface LoginModalProps {
     onClose: () => void
@@ -22,9 +23,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({onClose}) => {
                 setToken(token);
                 onClose();
             })
-            .catch((err) => {
-                console.error(err);
-                setError(err.response.data.message);
+            .catch((response) => {
+                setError(extractErrorMessage(response, 'Failed to login'));
             });
     };
 

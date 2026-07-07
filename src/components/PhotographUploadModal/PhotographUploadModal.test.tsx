@@ -222,9 +222,7 @@ describe('PhotographUploadModal', () => {
     });
 
     test('shows an error and does not close the modal when upload fails', async () => {
-        mockedPostPhotograph.mockRejectedValueOnce({
-            response: { data: { message: 'Upload failed on server' } }
-        });
+        mockedPostPhotograph.mockRejectedValueOnce({});
 
         render(
             <AuthProvider>
@@ -243,7 +241,7 @@ describe('PhotographUploadModal', () => {
         await userEvent.click(uploadButton);
 
         await waitFor(() => {
-            const error = screen.getByText('Upload failed on server');
+            const error = screen.getByText('Failed to upload');
             expect(error).toBeInTheDocument();
         });
 
