@@ -21,6 +21,7 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
     const [title, setTitle] = React.useState(photo.title);
     const [description, setDescription] = React.useState(photo.description || null);
 
+    const [isGenerating, setIsGenerating] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
 
     const handleEdit = () => {
@@ -45,9 +46,11 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
 
     const handleGenerateDescription = () => {
 
-        if (!token) {
+        if (!token || isGenerating) {
             return;
         }
+
+        setIsGenerating(true);
 
         postGenerateDescription({
             token,
@@ -57,6 +60,8 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
         }).catch((err) => {
             console.error(err);
             setError(err.response?.data?.message);
+        }).finally(() => {
+            setIsGenerating(false);
         });
     };
 
@@ -110,7 +115,9 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
                 )}
 
                 <div className="modal-actions">
-                    <button onClick={() => handleGenerateDescription()}><HiOutlineSparkles />Generate description</button>
+                    <button onClick={handleGenerateDescription} disabled={isGenerating}>
+                        <HiOutlineSparkles />{isGenerating ? 'Generating…' : 'Generate description'}
+                    </button>
                 </div>
 
                 <div className="modal-actions">
