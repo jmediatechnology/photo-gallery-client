@@ -56,6 +56,11 @@ describe('error', () => {
         expect(extractErrorMessage(fakeError, 'Fallback error message')).toBe('Fallback error message');
     });
 
+    test('returns from custom object the message', () => {
+        const customObject = { message: 'My error message' };
+        expect(extractErrorMessage(customObject, 'Fallback error message')).toBe('My error message');
+    });
+
     test('returns fallback for null', () => {
         expect(extractErrorMessage(null, 'Fallback error message')).toBe('Fallback error message');
     });

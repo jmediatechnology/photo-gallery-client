@@ -8,10 +8,19 @@ export interface ApiErrorPayload {
 
 export const extractErrorMessage = (err: unknown, fallback: string): string => {
     if (axios.isAxiosError<ApiErrorPayload>(err)) {
-        return err.response?.data?.message ?? err.response?.data?.title ?? fallback;
+        return err.response?.data?.message || err.response?.data?.title || fallback;
     }
-    if (err instanceof Error) {
+
+    if (err instanceof Error && err.message) {
         return err.message;
     }
+
+    if (err !== null &&
+        typeof err === 'object' &&
+        'message' in err &&
+        typeof err.message === 'string') {
+        return err.message || fallback;
+    }
+
     return fallback;
 };
