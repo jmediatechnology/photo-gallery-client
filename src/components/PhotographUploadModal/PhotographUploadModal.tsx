@@ -17,6 +17,7 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
     const [title, setTitle] = React.useState('');
     const [description, setDescription] = React.useState('');
     const [files, setFiles] = React.useState<File[]>([]);
+    const [isBusy, setIsBusy] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
     const [validationErrorTitle, setValidationErrorTitle] = React.useState<string | null>(null);
     const [validationErrorFile, setValidationErrorFile] = React.useState<string | null>(null);
@@ -29,9 +30,11 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
 
     const handleUpload = () => {
 
-        if (!token) {
+        if (!token || isBusy) {
             return;
         }
+
+        setIsBusy(true);
 
         if (title.length === 0) {
             setValidationErrorTitle('Title is required');
@@ -60,6 +63,8 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
             onClose();
         }).catch((response) => {
             setError(extractErrorMessage(response, 'Failed to upload'));
+        }).finally(() => {
+            setIsBusy(false);
         });
     };
 
@@ -127,7 +132,7 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
                 )}
 
                 <div className="modal-field">
-                    <button className="" onClick={handleUpload}>Upload</button>
+                    <button className="" onClick={handleUpload} disabled={isBusy}>Upload</button>
                 </div>
             </div>
         </div>

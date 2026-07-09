@@ -22,14 +22,16 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
     const [title, setTitle] = React.useState(photo.title);
     const [description, setDescription] = React.useState(photo.description || null);
 
-    const [isGenerating, setIsGenerating] = React.useState(false);
+    const [isBusy, setIsBusy] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
 
     const handleEdit = () => {
 
-        if (!token) {
+        if (!token || isBusy) {
             return;
         }
+
+        setIsBusy(true);
 
         patchPhotograph({
             token,
@@ -41,16 +43,18 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
             onClose();
         }).catch((response) => {
             setError(extractErrorMessage(response, 'Failed to edit photograph'));
+        }).finally(() => {
+            setIsBusy(false);
         });
     };
 
     const handleGenerateDescription = () => {
 
-        if (!token || isGenerating) {
+        if (!token || isBusy) {
             return;
         }
 
-        setIsGenerating(true);
+        setIsBusy(true);
 
         postGenerateDescription({
             token,
@@ -60,7 +64,7 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
         }).catch((response) => {
             setError(extractErrorMessage(response, 'Failed to generate description'));
         }).finally(() => {
-            setIsGenerating(false);
+            setIsBusy(false);
         });
     };
 
@@ -114,13 +118,13 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
                 )}
 
                 <div className="modal-actions">
-                    <button onClick={handleGenerateDescription} disabled={isGenerating}>
-                        <HiOutlineSparkles />{isGenerating ? 'Generating…' : 'Generate description'}
+                    <button onClick={handleGenerateDescription} disabled={isBusy}>
+                        <HiOutlineSparkles />{isBusy ? 'Generating…' : 'Generate description'}
                     </button>
                 </div>
 
                 <div className="modal-actions">
-                    <button onClick={() => handleEdit()}>Update</button>
+                    <button onClick={() => handleEdit()} disabled={isBusy}>Update</button>
                 </div>
             </div>
         </div>

@@ -17,13 +17,16 @@ export const PhotographDeleteModal: React.FC<PhotographModalProps> = ({ photo, o
     useEscape(onClose);
     const { token } = useAuth();
     const { removePhotograph } = usePhotographs();
+    const [isBusy, setIsBusy] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
 
     const handleDelete = (photograph: PhotographDTO) => {
 
-        if (!token) {
+        if (!token || isBusy) {
             return;
         }
+
+        setIsBusy(true);
 
         const {uuid} = photograph;
 
@@ -35,6 +38,8 @@ export const PhotographDeleteModal: React.FC<PhotographModalProps> = ({ photo, o
             onClose();
         }).catch((response) => {
             setError(extractErrorMessage(response, 'Failed to delete photograph'));
+        }).finally(() => {
+            setIsBusy(false);
         });
     };
 
@@ -68,7 +73,7 @@ export const PhotographDeleteModal: React.FC<PhotographModalProps> = ({ photo, o
                 )}
 
                 <div className="modal-actions">
-                    <button onClick={() => handleDelete(photo)}>YES</button>
+                    <button onClick={() => handleDelete(photo)} disabled={isBusy}>YES</button>
                     <button onClick={onClose}>NO</button>
                 </div>
             </div>
