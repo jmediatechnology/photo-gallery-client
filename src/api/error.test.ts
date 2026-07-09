@@ -9,6 +9,11 @@ describe('error', () => {
         expect(extractErrorMessage(error, 'Fallback error message')).toBe('My error message');
     });
 
+    test('returns fallback when Error message is an empty string', () => {
+        const error = new Error('');
+        expect(extractErrorMessage(error, 'Fallback error message')).toBe('Fallback error message');
+    });
+
     test('returns axios error response message when axios error response has message', () => {
         const error = createAxiosError({ message: 'Axios error message' });
         expect(extractErrorMessage(error, 'Fallback error message')).toBe('Axios error message');
