@@ -1,5 +1,6 @@
 import {extractErrorMessage} from "./error.ts";
 import {createAxiosError} from "../../tests/utils/createAxiosError.ts";
+import {AxiosError} from "axios";
 
 describe('error', () => {
 
@@ -30,6 +31,11 @@ describe('error', () => {
 
     test('returns fallback when axios error has no response object (network error)', () => {
         const error = createAxiosError(undefined);
+        expect(extractErrorMessage(error, 'Fallback error message')).toBe('Fallback error message');
+    });
+
+    test('returns fallback for a genuine network error with no response at all', () => {
+        const error = new AxiosError('Network Error', 'ERR_NETWORK');
         expect(extractErrorMessage(error, 'Fallback error message')).toBe('Fallback error message');
     });
 
