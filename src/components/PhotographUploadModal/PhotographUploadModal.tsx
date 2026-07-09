@@ -34,8 +34,6 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
             return;
         }
 
-        setIsBusy(true);
-
         if (title.length === 0) {
             setValidationErrorTitle('Title is required');
             return;
@@ -45,6 +43,8 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
             setValidationErrorFile('No file specified');
             return;
         }
+
+        setIsBusy(true);
 
         Promise.all(
             files.map(
