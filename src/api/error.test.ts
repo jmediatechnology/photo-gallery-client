@@ -18,9 +18,14 @@ describe('error', () => {
         expect(extractErrorMessage(error, 'Fallback error message')).toBe('Axios error title');
     });
 
-    test('returns axios error response title when axios error response message is empty string title is set', () => {
+    test('returns axios error response title when axios error response message is empty string and title is set', () => {
         const error = createAxiosError({ message: '', title: 'Axios error title' });
         expect(extractErrorMessage(error, 'Fallback error message')).toBe('Axios error title');
+    });
+
+    test('returns fallback when axios error response message is an empty string and title is also absent', () => {
+        const error = createAxiosError({ message: '' });
+        expect(extractErrorMessage(error, 'Fallback error message')).toBe('Fallback error message');
     });
 
     test('returns fallback when axios error has no response object (network error)', () => {
