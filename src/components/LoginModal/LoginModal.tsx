@@ -12,12 +12,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({onClose}) => {
 
     const [username, setUsername] = React.useState('');
     const [password, setPassword] = React.useState('');
-
+    const [isBusy, setIsBusy] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
 
     const { setToken } = useAuth();
 
     const handleLogin = () => {
+
+        if (isBusy) {
+            return;
+        }
+
+        setIsBusy(true);
+
         postLogin({username, password})
             .then((token) => {
                 setToken(token);
@@ -25,7 +32,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({onClose}) => {
             })
             .catch((response) => {
                 setError(extractErrorMessage(response, 'Failed to login'));
-            });
+            }).finally(() => {
+            setIsBusy(false);
+        });
     };
 
     return (
@@ -67,7 +76,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({onClose}) => {
                     )}
 
                     <div className="modal-field">
-                        <button className="" onClick={handleLogin}>Login</button>
+                        <button className="" onClick={handleLogin} disabled={isBusy}>Login</button>
                     </div>
             </div>
         </div>
