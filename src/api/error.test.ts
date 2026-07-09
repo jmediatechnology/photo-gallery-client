@@ -1,64 +1,31 @@
-import {type ApiErrorPayload, extractErrorMessage} from "./error.ts";
-import {
-    AxiosError
-} from "axios";
-
-
-const createAxiosError = (
-    data?: ApiErrorPayload,
-    status: number = 400,
-    statusText: string = 'Bad Request'
-): AxiosError => {
-    return new AxiosError(
-        'Request failed with status code 422',
-        'ERR_BAD_REQUEST',
-        undefined,
-        undefined,
-        {
-            data,
-            status,
-            statusText,
-            headers: {},
-            config: {} as never,
-        }
-    );
-};
+import {extractErrorMessage} from "./error.ts";
+import {createAxiosError} from "../../tests/utils/createAxiosError.ts";
 
 describe('error', () => {
 
-    test('returns error message', () => {
+    test('returns error message for error object', () => {
         const error = new Error('My error message');
         expect(extractErrorMessage(error, 'Fallback error message')).toBe('My error message');
     });
 
-    test('returns axios error message', () => {
+    test('returns axios error response message when axios error response has message', () => {
         const error = createAxiosError({ message: 'Axios error message' });
         expect(extractErrorMessage(error, 'Fallback error message')).toBe('Axios error message');
     });
 
-    test('returns axios error title', () => {
+    test('returns axios error response title when axios error response message is not set but title is set', () => {
         const error = createAxiosError({ title: 'Axios error title' });
         expect(extractErrorMessage(error, 'Fallback error message')).toBe('Axios error title');
     });
 
-    test('returns axios error has no data', () => {
-        const error = createAxiosError();
-        expect(extractErrorMessage(error, 'Fallback error message')).toBe('Fallback error message');
-    });
-
-    test('returns fallback when there is no response object at all (network error)', () => {
-        const error = new AxiosError('Network Error', 'ERR_NETWORK');
+    test('returns fallback when axios error has no response object (network error)', () => {
+        const error = createAxiosError(undefined);
         expect(extractErrorMessage(error, 'Fallback error message')).toBe('Fallback error message');
     });
 
     test('returns fallback for a spoofed object that looks axios-shaped but is not', () => {
-        const fakeError = { response: { data: { message: 'spoofed message' } } };
-        expect(extractErrorMessage(fakeError, 'Fallback error message')).toBe('Fallback error message');
-    });
-
-    test('returns from custom object the message', () => {
-        const customObject = { message: 'My error message' };
-        expect(extractErrorMessage(customObject, 'Fallback error message')).toBe('My error message');
+        const error = { response: { data: { message: 'spoofed message' } } };
+        expect(extractErrorMessage(error, 'Fallback error message')).toBe('Fallback error message');
     });
 
     test('returns fallback for null', () => {

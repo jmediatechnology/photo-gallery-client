@@ -6,6 +6,7 @@ import {AuthProvider} from "../../auth/AuthContext.tsx";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
 import {postPhotograph} from "../../api/client.ts";
 import type {PhotographDTO} from "../../types";
+import {createAxiosError} from "../../../tests/utils/createAxiosError.ts";
 
 vi.mock(import('../../auth/AuthContext'), async (importOriginal) => {
     const actual = await importOriginal();
@@ -222,9 +223,7 @@ describe('PhotographUploadModal', () => {
     });
 
     test('shows an error and does not close the modal when upload fails', async () => {
-        mockedPostPhotograph.mockRejectedValueOnce({
-            message: 'Upload failed on server'
-        });
+        mockedPostPhotograph.mockRejectedValueOnce(createAxiosError({ message: 'Upload failed on server'}));
 
         render(
             <AuthProvider>
