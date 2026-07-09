@@ -1,12 +1,8 @@
 import { AxiosError } from "axios";
-
-interface AxiosErrorResponseData {
-    message?: string;
-    title?: string;
-}
+import type {ApiErrorPayload} from "../../src/api/types/ApiErrorPayload.ts";
 
 export const createAxiosError = (
-    responseData?: AxiosErrorResponseData,
+    responseData?: ApiErrorPayload,
     code: string = 'ERR_BAD_REQUEST',
     status: number = 400,
     statusText: string = 'Bad Request'
