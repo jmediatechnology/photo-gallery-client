@@ -1,5 +1,5 @@
 import {fireEvent, render, screen} from "@testing-library/react";
-import {PhotographModal} from "./PhotographModal.tsx";
+import {PhotographShowModal} from "./PhotographShowModal.tsx";
 import {afterEach, type Mock, vi} from "vitest";
 import type {PhotographDTO} from "../../types";
 import {getPhotographs} from "../../api/client";
@@ -30,7 +30,7 @@ const mockPhoto = {
 const mockOnClose = vi.fn();
 const mockOnSelect = vi.fn();
 
-describe('PhotographModal', () => {
+describe('PhotographShowModal', () => {
 
     beforeEach(() => {
         mockedGetPhotographs.mockResolvedValue([]);
@@ -45,7 +45,7 @@ describe('PhotographModal', () => {
         render(
             <AuthProvider>
                 <PhotographProvider>
-                    <PhotographModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
+                    <PhotographShowModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
                 </PhotographProvider>
             </AuthProvider>
         );
@@ -60,7 +60,7 @@ describe('PhotographModal', () => {
         render(
             <AuthProvider>
                 <PhotographProvider>
-                    <PhotographModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
+                    <PhotographShowModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
                 </PhotographProvider>
             </AuthProvider>
         );
@@ -75,7 +75,7 @@ describe('PhotographModal', () => {
         render(
             <AuthProvider>
                 <PhotographProvider>
-                    <PhotographModal photo={photoNoDesc} onClose={mockOnClose} onSelect={mockOnSelect} />
+                    <PhotographShowModal photo={photoNoDesc} onClose={mockOnClose} onSelect={mockOnSelect} />
                 </PhotographProvider>
             </AuthProvider>
         );
@@ -88,7 +88,7 @@ describe('PhotographModal', () => {
         render(
             <AuthProvider>
                 <PhotographProvider>
-                    <PhotographModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
+                    <PhotographShowModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
                 </PhotographProvider>
             </AuthProvider>
         );
@@ -102,7 +102,7 @@ describe('PhotographModal', () => {
         render(
             <AuthProvider>
                 <PhotographProvider>
-                    <PhotographModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
+                    <PhotographShowModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
                 </PhotographProvider>
             </AuthProvider>
         );
@@ -115,7 +115,7 @@ describe('PhotographModal', () => {
         render(
             <AuthProvider>
                 <PhotographProvider>
-                    <PhotographModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
+                    <PhotographShowModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
                 </PhotographProvider>
             </AuthProvider>
         );
@@ -128,7 +128,7 @@ describe('PhotographModal', () => {
         render(
             <AuthProvider>
                 <PhotographProvider>
-                    <PhotographModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
+                    <PhotographShowModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
                 </PhotographProvider>
             </AuthProvider>
         );
@@ -145,7 +145,7 @@ describe('PhotographModal', () => {
         const { unmount } = render(
             <AuthProvider>
                 <PhotographProvider>
-                    <PhotographModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
+                    <PhotographShowModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
                 </PhotographProvider>
             </AuthProvider>
         );

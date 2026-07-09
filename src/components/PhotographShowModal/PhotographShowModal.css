@@ -29,3 +29,7 @@
 .padding-32 {
     padding: 32px;
 }
+
+p.description {
+    padding: 0 24px;
+}

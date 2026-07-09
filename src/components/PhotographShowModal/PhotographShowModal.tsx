@@ -5,7 +5,7 @@ import type {PhotographDTO} from "../../types";
 import {useEscape} from "../../hooks/useEscape.tsx";
 import {ThumbnailFooter} from "../ThumbnailFooter/ThumbnailFooter.tsx";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
-import './PhotographModal.css';
+import './PhotographShowModal.css';
 
 interface PhotographModalProps {
     photo: PhotographDTO;
@@ -13,7 +13,7 @@ interface PhotographModalProps {
     onSelect: (photograph: PhotographDTO) => void;
 }
 
-export const PhotographModal: React.FC<PhotographModalProps> = ({ photo, onClose, onSelect }) => {
+export const PhotographShowModal: React.FC<PhotographModalProps> = ({ photo, onClose, onSelect }) => {
     useEscape(onClose);
 
     const {photographs} = usePhotographs();
@@ -43,7 +43,7 @@ export const PhotographModal: React.FC<PhotographModalProps> = ({ photo, onClose
                     className="modal-image"
                 />
 
-                {photo.description && <p>{photo.description}</p>}
+                {photo.description && <p className='description'>{photo.description}</p>}
 
                 <ThumbnailFooter photographs={photographs} offset={selectedPhotoIndex} onSelect={onSelect} />
             </div>

@@ -25,14 +25,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({onClose}) => {
 
         setIsBusy(true);
 
-        postLogin({username, password})
-            .then((token) => {
-                setToken(token);
-                onClose();
-            })
-            .catch((response) => {
-                setError(extractErrorMessage(response, 'Failed to login'));
-            }).finally(() => {
+        postLogin({
+            username,
+            password
+        }).then((token) => {
+            setToken(token);
+            onClose();
+        }).catch((response) => {
+            setError(extractErrorMessage(response, 'Failed to login'));
+        }).finally(() => {
             setIsBusy(false);
         });
     };

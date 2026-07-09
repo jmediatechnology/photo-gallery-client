@@ -3,7 +3,7 @@ import '../../style/spinner.css';
 import '../../style/error.css';
 import * as React from "react";
 import type { PhotographDTO } from "../../types";
-import {PhotographModal} from "../PhotographModal/PhotographModal.tsx";
+import {PhotographShowModal} from "../PhotographShowModal/PhotographShowModal.tsx";
 import {PhotographDeleteModal} from "../PhotographDeleteModal/PhotographDeleteModal.tsx";
 import {PhotographEditModal} from "../PhotographEditModal/PhotographEditModal.tsx";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
@@ -58,12 +58,12 @@ export const PhotoGallery = () => {
 
             {selectedPhoto && (
                 <>
-                    <PhotographModal
+                    <PhotographShowModal
                         photo={selectedPhoto}
                         onClose={() => setSelectedPhoto(null)}
                         onSelect={setSelectedPhoto}
                     >
-                    </PhotographModal>
+                    </PhotographShowModal>
                 </>
 
             )}
