@@ -5,6 +5,7 @@ import type {PhotographDTO} from "../../types";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
 import {useEscape} from "../../hooks/useEscape.tsx";
 import {extractErrorMessage} from "../../api/error.ts";
+import {createUuid} from "../../factory/uuid.ts";
 
 interface UploadModalProps {
     onClose: () => void
@@ -51,7 +52,7 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
                 async (file: File, index: number) => {
                     const response: PhotographDTO = await postPhotograph({
                         token,
-                        uuid: crypto.randomUUID(),
+                        uuid: createUuid(),
                         title: index === 0 ? title : `${title} ${index}`,
                         description,
                         file
