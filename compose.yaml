@@ -1,5 +1,6 @@
 services:
   react-prod:
+    image: ghcr.io/jmediatechnology/photo-gallery-client:latest
     build:
       context: .
       dockerfile: docker/prod/Dockerfile
