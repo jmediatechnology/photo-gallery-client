@@ -1,0 +1,29 @@
+
+.action-footer {
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.action-footer-slideshow-toggle {
+    background: none;
+    border: none;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+    color: inherit;
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.action-footer-slideshow-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.action-footer-slideshow-toggle.active {
+    color: #646cff;
+}

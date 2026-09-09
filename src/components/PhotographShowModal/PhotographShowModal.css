@@ -13,13 +13,21 @@
 }
 
 .modal-content-show {
-    position: relative;
-    overflow: visible;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    justify-content: space-between;
+    position: relative;
+    overflow: visible;
     color: #f1f1f1;
+    padding-top: 5px;
+    padding-bottom: 5px;
     animation: slideUp 0.35s ease-out;
+}
+
+.modal-photograph {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .background-black {
