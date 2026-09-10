@@ -1,7 +1,7 @@
-import logo from '../../assets/photo-gallery-logo-transparent-cropped-75-50.png';
+import logo from '../../assets/photo_gallery_logo.png';
 
 export const Logo = () => {
     return(
-        <img src={logo} alt="Logo" />
+        <img src={logo} alt="Logo" height={75} />
     );
 };
