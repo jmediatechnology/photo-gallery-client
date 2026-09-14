@@ -30,6 +30,10 @@
     justify-content: center;
 }
 
+.modal-photograph-image {
+    overflow: hidden;
+}
+
 .background-black {
     background: #111;
 }
