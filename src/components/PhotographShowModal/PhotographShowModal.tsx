@@ -44,15 +44,17 @@ export const PhotographShowModal: React.FC<PhotographModalProps> = ({ photo, onC
 
                 <div className="modal-photograph">
                     <h3 className="modal-photograph-title">{photo.title}</h3>
-                    <figure className="photograph-with-description" ref={containerRef} {...containerProps}>
-                        <img
-                            src={api.url(photo.filePath)}
-                            alt={photo.description ?? photo.title}
-                            title={photo.title}
-                            className="modal-image"
-                            aria-label="photograph-image"
-                            style={{...imageStyle}}
-                        />
+                    <figure className="photograph-with-description">
+                        <div className="modal-photograph-image" ref={containerRef} {...containerProps}>
+                            <img
+                                src={api.url(photo.filePath)}
+                                alt={photo.description ?? photo.title}
+                                title={photo.title}
+                                className="modal-image"
+                                aria-label="photograph-image"
+                                style={{...imageStyle}}
+                            />
+                        </div>
                         {photo.description && <figcaption className="description">{photo.description}</figcaption>}
                     </figure>
 
