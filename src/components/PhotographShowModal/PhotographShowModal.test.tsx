@@ -1,4 +1,4 @@
-import {act, fireEvent, render, screen} from "@testing-library/react";
+import {act, fireEvent, render, screen, waitFor} from "@testing-library/react";
 import {PhotographShowModal} from "./PhotographShowModal.tsx";
 import {afterEach, type Mock, vi} from "vitest";
 import type {PhotographDTO} from "../../types";
@@ -49,8 +49,58 @@ describe('PhotographShowModal', () => {
         vi.clearAllMocks();
     });
 
-    it('renders the image with correctly', () => {
+    it('renders photograph show modal with image description and title', async() => {
 
+        render(
+            <AuthProvider>
+                <PhotographProvider>
+                    <PhotographShowModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect}/>
+                </PhotographProvider>
+            </AuthProvider>
+        );
+
+        await waitFor(() => {
+            const closeButton = screen.getByRole('button', { name: 'Close'});
+            expect(closeButton).toBeInTheDocument();
+
+            const img = screen.getByRole<HTMLImageElement>('img', { name: 'photograph-image' });
+            expect(img).toBeInTheDocument();
+            expect(img).toBeInstanceOf(HTMLImageElement);
+            expect(img).toHaveAttribute('alt', mockPhoto.description);
+            expect(img).toHaveAttribute('title', mockPhoto.title);
+            expect(img).toHaveAttribute('src', 'https://test.com/images/beach.jpg');
+            expect(img).toHaveClass('modal-image');
+
+            expect(screen.getByTestId('thumbnail-footer')).toBeInTheDocument();
+            expect(screen.getByTestId('action-footer')).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Start slideshow' })).toBeInTheDocument();
+        });
+    });
+
+    it('renders photograph show modal without description', async() => {
+        const photographWithoutDescription = { ...mockPhoto, description: undefined } as PhotographDTO;
+
+        render(
+            <AuthProvider>
+                <PhotographProvider>
+                    <PhotographShowModal photo={photographWithoutDescription} onClose={mockOnClose} onSelect={mockOnSelect} />
+                </PhotographProvider>
+            </AuthProvider>
+        );
+
+        await waitFor(() => {
+            expect(screen.getByRole('heading', { name: mockPhoto.title })).toBeInTheDocument();
+
+            const img = screen.getByRole<HTMLImageElement>('img', { name: 'photograph-image' });
+            expect(img).toBeInTheDocument();
+            expect(img).toBeInstanceOf(HTMLImageElement);
+            expect(img).toHaveAttribute('alt', mockPhoto.title);
+
+            expect(screen.queryByText(mockPhoto.description)).not.toBeInTheDocument();
+        });
+    });
+
+    it('calls onClose when clicking the overlay (outside modal-content)', async() => {
         render(
             <AuthProvider>
                 <PhotographProvider>
@@ -59,16 +109,13 @@ describe('PhotographShowModal', () => {
             </AuthProvider>
         );
 
-        const img = screen.getByAltText(mockPhoto.title);
-        expect(img).toBeInTheDocument();
-        expect(img).toHaveAttribute('src', 'https://test.com/images/beach.jpg');
-        expect(img).toHaveClass('modal-image');
-
-        expect(screen.getByTestId('action-footer')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Start slideshow' })).toBeInTheDocument();
+        await waitFor(() => {
+            fireEvent.click(screen.getByTestId('modal-overlay') ?? document.querySelector('.modal-overlay')!);
+            expect(mockOnClose).toHaveBeenCalledTimes(1);
+        });
     });
 
-    it('displays title and description', () => {
+    it('does NOT call onClose when clicking inside modal-content', async() => {
         render(
             <AuthProvider>
                 <PhotographProvider>
@@ -77,26 +124,13 @@ describe('PhotographShowModal', () => {
             </AuthProvider>
         );
 
-        expect(screen.getByRole('heading', { name: mockPhoto.title })).toBeInTheDocument();
-        expect(screen.getByText(mockPhoto.description)).toBeInTheDocument();
+        await waitFor(() => {
+            fireEvent.click(screen.getByAltText(mockPhoto.description));
+            expect(mockOnClose).not.toHaveBeenCalled();
+        });
     });
 
-    it('does not render description paragraph when description is missing', () => {
-        const photoNoDesc = { ...mockPhoto, description: undefined } as PhotographDTO;
-
-        render(
-            <AuthProvider>
-                <PhotographProvider>
-                    <PhotographShowModal photo={photoNoDesc} onClose={mockOnClose} onSelect={mockOnSelect} />
-                </PhotographProvider>
-            </AuthProvider>
-        );
-
-        expect(screen.getByRole('heading', { name: mockPhoto.title })).toBeInTheDocument();
-        expect(screen.queryByText(mockPhoto.description)).not.toBeInTheDocument();
-    });
-
-    it('calls onClose when clicking the overlay (outside modal-content)', () => {
+    it('calls onClose when Escape key is pressed', async() => {
         render(
             <AuthProvider>
                 <PhotographProvider>
@@ -105,12 +139,13 @@ describe('PhotographShowModal', () => {
             </AuthProvider>
         );
 
-        fireEvent.click(screen.getByTestId('modal-overlay') ?? document.querySelector('.modal-overlay')!);
-
-        expect(mockOnClose).toHaveBeenCalledTimes(1);
+        await waitFor(() => {
+            fireEvent.keyDown(window, {key: 'Escape'});
+            expect(mockOnClose).toHaveBeenCalledTimes(1);
+        });
     });
 
-    it('does NOT call onClose when clicking inside modal-content', () => {
+    it('does not call onClose for other keys', async() => {
         render(
             <AuthProvider>
                 <PhotographProvider>
@@ -119,38 +154,14 @@ describe('PhotographShowModal', () => {
             </AuthProvider>
         );
 
-        fireEvent.click(screen.getByAltText(mockPhoto.title));
-        expect(mockOnClose).not.toHaveBeenCalled();
+        await waitFor(() => {
+            fireEvent.keyDown(window, {key: 'Enter'});
+            fireEvent.keyDown(window, {key: 'a'});
+            expect(mockOnClose).not.toHaveBeenCalled();
+        });
     });
 
-    it('calls onClose when Escape key is pressed', () => {
-        render(
-            <AuthProvider>
-                <PhotographProvider>
-                    <PhotographShowModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
-                </PhotographProvider>
-            </AuthProvider>
-        );
-
-        fireEvent.keyDown(window, { key: 'Escape' });
-        expect(mockOnClose).toHaveBeenCalledTimes(1);
-    });
-
-    it('does not call onClose for other keys', () => {
-        render(
-            <AuthProvider>
-                <PhotographProvider>
-                    <PhotographShowModal photo={mockPhoto} onClose={mockOnClose} onSelect={mockOnSelect} />
-                </PhotographProvider>
-            </AuthProvider>
-        );
-
-        fireEvent.keyDown(window, { key: 'Enter' });
-        fireEvent.keyDown(window, { key: 'a' });
-        expect(mockOnClose).not.toHaveBeenCalled();
-    });
-
-    it('adds and removes the keydown listener on mount/unmount', () => {
+    it('adds and removes the keydown listener on mount/unmount', async() => {
         const addSpy = vi.spyOn(window, 'addEventListener');
         const removeSpy = vi.spyOn(window, 'removeEventListener');
 
@@ -172,7 +183,7 @@ describe('PhotographShowModal', () => {
         removeSpy.mockRestore();
     });
 
-    it('toggles the ActionFooter Slideshow button', () => {
+    it('toggles the ActionFooter Slideshow button', async() => {
         render(
             <AuthProvider>
                 <PhotographProvider>
@@ -181,11 +192,13 @@ describe('PhotographShowModal', () => {
             </AuthProvider>
         );
 
-        fireEvent.click(screen.getByRole('button', { name: 'Start slideshow' }));
-        expect(screen.getByRole('button', { name: 'Stop slideshow' })).toBeInTheDocument();
+        await waitFor(() => {
+            fireEvent.click(screen.getByRole('button', {name: 'Start slideshow'}));
+            expect(screen.getByRole('button', {name: 'Stop slideshow'})).toBeInTheDocument();
 
-        fireEvent.click(screen.getByRole('button', { name: 'Stop slideshow' }));
-        expect(screen.getByRole('button', { name: 'Start slideshow' })).toBeInTheDocument();
+            fireEvent.click(screen.getByRole('button', {name: 'Stop slideshow'}));
+            expect(screen.getByRole('button', {name: 'Start slideshow'})).toBeInTheDocument();
+        });
     });
 
     it('advances to the next photograph 5 seconds after starting the slideshow', async () => {

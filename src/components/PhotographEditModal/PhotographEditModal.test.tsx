@@ -57,7 +57,7 @@ describe('PhotographEditModal', () => {
         vi.clearAllMocks();
     });
 
-    test('renders title description and buttons', () => {
+    test('renders title description and buttons', async() => {
 
         render(
             <AuthProvider>
@@ -67,15 +67,17 @@ describe('PhotographEditModal', () => {
             </AuthProvider>
         );
 
-        const titleInput = screen.getByRole('textbox', { name: /title/i });
-        const descriptionInput = screen.getByRole('textbox', { name: /description/i });
-        const generateDescriptionButton = screen.getByRole('button', { name: 'Generate description' });
-        const updateButton = screen.getByRole('button', { name: 'Update' });
+        await waitFor(() => {
+            const titleInput = screen.getByRole('textbox', { name: /title/i });
+            const descriptionInput = screen.getByRole('textbox', { name: /description/i });
+            const generateDescriptionButton = screen.getByRole('button', { name: 'Generate description' });
+            const updateButton = screen.getByRole('button', { name: 'Update' });
 
-        expect(titleInput).toHaveValue(mockPhoto.title);
-        expect(descriptionInput).toHaveValue(mockPhoto.description);
-        expect(generateDescriptionButton).toBeInTheDocument();
-        expect(updateButton).toBeInTheDocument();
+            expect(titleInput).toHaveValue(mockPhoto.title);
+            expect(descriptionInput).toHaveValue(mockPhoto.description);
+            expect(generateDescriptionButton).toBeInTheDocument();
+            expect(updateButton).toBeInTheDocument();
+        });
     });
 
     test('closes modal when update button is clicked', async() => {

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import {render, screen, waitFor} from "@testing-library/react";
 import App from "./App";
 import { getPhotographs } from "./api/client";
 import { vi, type Mock } from "vitest";
@@ -14,9 +14,11 @@ describe("App", () => {
         mockedGetPhotographs.mockResolvedValue([]);
     });
 
-    test("renders App and loads PhotoGallery", () => {
+    test('renders App and loads PhotoGallery', async() => {
         render(<App />);
 
-        expect(screen.getByText(/Loading photographs.../i)).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText(/Loading photographs.../i)).toBeInTheDocument();
+        });
     });
 });

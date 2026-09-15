@@ -33,7 +33,6 @@ export const PhotographShowModal: React.FC<PhotographModalProps> = ({ photo, onC
             <div className="modal-content-show background-black" onClick={(e) => e.stopPropagation()}>
 
                 <div className="modal-header">
-                    <h2>{photo.title}</h2>
                     <button
                         className="modal-close"
                         onClick={onClose}
@@ -44,21 +43,24 @@ export const PhotographShowModal: React.FC<PhotographModalProps> = ({ photo, onC
                 </div>
 
                 <div className="modal-photograph">
-                    <div className="modal-photograph-image" ref={containerRef} {...containerProps} >
+                    <h3 className="modal-photograph-title">{photo.title}</h3>
+                    <figure className="photograph-with-description" ref={containerRef} {...containerProps}>
                         <img
                             src={api.url(photo.filePath)}
-                            alt={photo.title}
+                            alt={photo.description ?? photo.title}
+                            title={photo.title}
                             className="modal-image"
-                            style={{ ...imageStyle }}
+                            aria-label="photograph-image"
+                            style={{...imageStyle}}
                         />
-                    </div>
+                        {photo.description && <figcaption className="description">{photo.description}</figcaption>}
+                    </figure>
 
-                    {photo.description && <p className='description'>{photo.description}</p>}
                 </div>
 
                 <div>
-                    <ThumbnailFooter photographs={photographs} offset={selectedPhotoIndex} onSelect={onSelect} />
-                    <ActionFooter isPlaying={isPlaying} onToggleSlideshow={toggleSlideshow} />
+                    <ThumbnailFooter photographs={photographs} offset={selectedPhotoIndex} onSelect={onSelect}/>
+                    <ActionFooter isPlaying={isPlaying} onToggleSlideshow={toggleSlideshow}/>
                 </div>
             </div>
         </div>

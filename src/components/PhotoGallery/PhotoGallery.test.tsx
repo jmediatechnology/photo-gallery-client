@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {fireEvent, render, screen, waitFor, within} from "@testing-library/react";
 import { PhotoGallery } from "./PhotoGallery";
 import { vi, type Mock } from "vitest";
 import { getPhotographs } from "../../api/client";
@@ -22,7 +22,7 @@ describe("PhotoGallery", () => {
         vi.clearAllMocks();
     });
 
-    test("shows loading state initially", () => {
+    test("shows loading state initially", async() => {
         mockedGetPhotographs.mockResolvedValue([]);
 
         render(
@@ -33,7 +33,9 @@ describe("PhotoGallery", () => {
             </AuthProvider>
         );
 
-        expect(screen.getByText(/Loading photographs.../i)).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText(/Loading photographs.../i)).toBeInTheDocument();
+        });
     });
 
     test("renders photos after successful fetch", async () => {
@@ -217,8 +219,12 @@ describe("PhotoGallery", () => {
 
         fireEvent.click(screen.getByRole('img', { name: "Night" }));
         await waitFor(() => {
-            expect(screen.queryByTestId('thumbnail-footer')).toBeInTheDocument();
-            expect(screen.getAllByRole('img', {name: 'Night'})).toHaveLength(3);
+
+            const thumbnailFooter = screen.getByTestId('thumbnail-footer');
+            expect(thumbnailFooter).toBeInTheDocument();
+
+            const thumbnailImages = within(thumbnailFooter).getAllByRole('img');
+            expect(thumbnailImages).toHaveLength(3);
         });
 
         fireEvent.keyDown(container, {key: 'Escape', code: 'Escape'})

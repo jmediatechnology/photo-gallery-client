@@ -67,7 +67,7 @@ describe('PhotographDeleteModal', () => {
         vi.clearAllMocks();
     });
 
-    test('renders delete modal', () => {
+    test('renders delete modal', async() => {
         render(
             <AuthProvider>
                 <PhotographProvider>
@@ -76,22 +76,24 @@ describe('PhotographDeleteModal', () => {
             </AuthProvider>
         );
 
-        const headerText = screen.getByText(`Delete ${mockPhoto.title}?`);
-        const image = screen.getByRole('img', { name: mockPhoto.title});
-        const title = screen.getByText(mockPhoto.title);
-        const description = screen.getByText(new RegExp(mockPhoto.description, 'i'));
-        const yesButton = screen.getByRole('button', { name: 'YES' });
-        const noButton = screen.getByRole('button', { name: 'NO' });
+        await waitFor(() => {
+            const headerText = screen.getByText(`Delete ${mockPhoto.title}?`);
+            const image = screen.getByRole('img', { name: mockPhoto.title});
+            const title = screen.getByText(mockPhoto.title);
+            const description = screen.getByText(new RegExp(mockPhoto.description, 'i'));
+            const yesButton = screen.getByRole('button', { name: 'YES' });
+            const noButton = screen.getByRole('button', { name: 'NO' });
 
-        expect(headerText).toBeInTheDocument();
-        expect(image).toBeInTheDocument();
-        expect(title).toBeInTheDocument();
-        expect(description).toBeInTheDocument();
-        expect(yesButton).toBeInTheDocument();
-        expect(noButton).toBeInTheDocument();
+            expect(headerText).toBeInTheDocument();
+            expect(image).toBeInTheDocument();
+            expect(title).toBeInTheDocument();
+            expect(description).toBeInTheDocument();
+            expect(yesButton).toBeInTheDocument();
+            expect(noButton).toBeInTheDocument();
+        });
     });
 
-    test('closes modal when button no gets clicked', () => {
+    test('closes modal when button no gets clicked', async() => {
         render(
             <AuthProvider>
                 <PhotographProvider>
@@ -100,11 +102,12 @@ describe('PhotographDeleteModal', () => {
             </AuthProvider>
         );
 
-        const noButton = screen.getByRole('button', { name: 'NO' });
-
+        const noButton = screen.getByRole('button', {name: 'NO'});
         fireEvent.click(noButton);
 
-        expect(mockOnClose).toHaveBeenCalledTimes(1);
+        await waitFor(() => {
+            expect(mockOnClose).toHaveBeenCalledTimes(1);
+        });
     });
 
     test('calls deletePhotograph when button yes gets clicked', async() => {
