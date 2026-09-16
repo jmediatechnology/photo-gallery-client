@@ -59,6 +59,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({onClose}) => {
                             className=""
                             placeholder="Enter your username"
                             onChange={(e) => setUsername(e.target.value)}
+                            autoFocus={true}
                         />
                     </div>
                     <div className="modal-field">

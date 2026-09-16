@@ -101,6 +101,7 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
                         className=""
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
+                        autoFocus={true}
                     />
                 </div>
                 <div className="modal-field-column">

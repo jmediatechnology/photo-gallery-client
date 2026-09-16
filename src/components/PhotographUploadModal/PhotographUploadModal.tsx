@@ -96,6 +96,7 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
                                 setValidationErrorTitle('Title is required');
                             }
                         }}
+                        autoFocus={true}
                     />
                     {validationErrorTitle && (
                         <p style={{ color: "red", fontSize: "14px" }}>{validationErrorTitle}</p>
