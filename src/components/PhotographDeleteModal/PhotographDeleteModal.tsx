@@ -48,7 +48,6 @@ export const PhotographDeleteModal: React.FC<PhotographModalProps> = ({ photo, o
             <div className="modal-content-delete background-black padding-32" onClick={(e) => e.stopPropagation()}>
 
                 <div className="modal-header">
-                    <h2>Delete {photo.title}?</h2>
                     <button
                         className="modal-close"
                         onClick={onClose}
@@ -72,8 +71,10 @@ export const PhotographDeleteModal: React.FC<PhotographModalProps> = ({ photo, o
                     <div style={{ color: "red", fontSize: "14px" }}>{error}</div>
                 )}
 
+                <h3>Permanently delete photograph: "{photo.title}"?</h3>
+
                 <div className="modal-actions">
-                    <button onClick={() => handleDelete(photo)} disabled={isBusy}>YES</button>
+                    <button onClick={() => handleDelete(photo)} disabled={isBusy} autoFocus={true}>YES</button>
                     <button onClick={onClose}>NO</button>
                 </div>
             </div>

@@ -77,7 +77,7 @@ describe('PhotographDeleteModal', () => {
         );
 
         await waitFor(() => {
-            const headerText = screen.getByText(`Delete ${mockPhoto.title}?`);
+            const headerText = screen.getByText(`Permanently delete photograph: "${mockPhoto.title}"?`);
             const image = screen.getByRole('img', { name: mockPhoto.title});
             const title = screen.getByText(mockPhoto.title);
             const description = screen.getByText(new RegExp(mockPhoto.description, 'i'));

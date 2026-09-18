@@ -18,10 +18,10 @@ const PhotographContext = createContext<PhotographContextInterface | undefined>(
 
 export const PhotographProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [photographs, setPhotographs] = React.useState<CircularArray<PhotographDTO>>(new CircularArray());
-    const [isLoading, setIsLoading] = React.useState(true);
-    const [error, setError] = React.useState('');
+    const [isLoading, setIsLoading] = React.useState<boolean>(true);
+    const [error, setError] = React.useState<string>('');
 
-    React.useEffect(() => {
+    React.useEffect((): void => {
         getPhotographs()
             .then((response: PhotographDTO[]) => {
                 setPhotographs(CircularArray.from(response));
@@ -34,24 +34,23 @@ export const PhotographProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             });
     }, []);
 
-    const addPhotograph = (response: PhotographDTO) => {
-        setPhotographs(CircularArray.from([response, ...photographs]));
+    const addPhotograph = (response: PhotographDTO): void => {
+        setPhotographs((prev: CircularArray<PhotographDTO>) => CircularArray.from([response, ...prev]));
     };
 
-    const editPhotograph = (response: PhotographDTO) => {
-        const newPhotographs = photographs.reduce<CircularArray<PhotographDTO>>(
-            (accumulator, current) => {
+    const editPhotograph = (response: PhotographDTO): void => {
+        setPhotographs((prev: CircularArray<PhotographDTO>) => prev.reduce<CircularArray<PhotographDTO>>(
+            (accumulator: CircularArray<PhotographDTO>, current: PhotographDTO): CircularArray<PhotographDTO> => {
                 accumulator.push(current.uuid === response.uuid ? response : current);
                 return accumulator;
             },
             new CircularArray()
-        );
-        setPhotographs(newPhotographs);
+        ));
     };
 
-    const removePhotograph = (uuid: string) => {
-        setPhotographs(CircularArray.from(
-            photographs.filter((photograph: PhotographDTO) => photograph.uuid !== uuid)
+    const removePhotograph = (uuid: string): void => {
+        setPhotographs((prev: CircularArray<PhotographDTO>) => CircularArray.from(
+            prev.filter((photograph: PhotographDTO) => photograph.uuid !== uuid)
         ));
     };
 
