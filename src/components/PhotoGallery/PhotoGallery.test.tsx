@@ -4,6 +4,7 @@ import { vi, type Mock } from "vitest";
 import { getPhotographs } from "../../api/client";
 import {AuthProvider} from "../../auth/AuthContext.tsx";
 import {PhotographProvider} from "../../context/PhotographContext.tsx";
+import {PhotographSelectionProvider} from "../../context/PhotographSelectionContext.tsx";
 
 vi.mock("../../api/client", () => ({
     getPhotographs: vi.fn()
@@ -25,13 +26,7 @@ describe("PhotoGallery", () => {
     test("shows loading state initially", async() => {
         mockedGetPhotographs.mockResolvedValue([]);
 
-        render(
-            <AuthProvider>
-                <PhotographProvider>
-                    <PhotoGallery />
-                </PhotographProvider>
-            </AuthProvider>
-        );
+        renderPhotoGallery();
 
         await waitFor(() => {
             expect(screen.getByText(/Loading photographs.../i)).toBeInTheDocument();
@@ -48,13 +43,7 @@ describe("PhotoGallery", () => {
             }
         ]);
 
-        render(
-            <AuthProvider>
-                <PhotographProvider>
-                    <PhotoGallery />
-                </PhotographProvider>
-            </AuthProvider>
-        );
+        renderPhotoGallery();
 
         await waitFor(() =>
             expect(screen.queryByText(/Loading photographs.../i)).not.toBeInTheDocument()
@@ -70,13 +59,7 @@ describe("PhotoGallery", () => {
     test("shows error message when fetch fails", async () => {
         mockedGetPhotographs.mockRejectedValue(new Error("Network error"));
 
-        render(
-            <AuthProvider>
-                <PhotographProvider>
-                    <PhotoGallery />
-                </PhotographProvider>
-            </AuthProvider>
-        );
+        renderPhotoGallery();
 
         await waitFor(() =>
             expect(screen.getByText(/Network error/i)).toBeInTheDocument()
@@ -99,13 +82,7 @@ describe("PhotoGallery", () => {
             },
         ]);
 
-        const { container } = render(
-            <AuthProvider>
-                <PhotographProvider>
-                    <PhotoGallery />
-                </PhotographProvider>
-            </AuthProvider>
-        );
+        const { container } = renderPhotoGallery();
 
         await waitFor(() =>
             expect(screen.queryByText(/Loading photographs.../i)).not.toBeInTheDocument()
@@ -146,13 +123,7 @@ describe("PhotoGallery", () => {
             },
         ]);
 
-        const { container } = render(
-            <AuthProvider>
-                <PhotographProvider>
-                    <PhotoGallery />
-                </PhotographProvider>
-            </AuthProvider>
-        );
+        const { container } = renderPhotoGallery();
 
         await waitFor(() =>
             expect(screen.queryByText(/Loading photographs.../i)).not.toBeInTheDocument()
@@ -200,13 +171,7 @@ describe("PhotoGallery", () => {
             },
         ]);
 
-        const { container } = render(
-            <AuthProvider>
-                <PhotographProvider>
-                    <PhotoGallery />
-                </PhotographProvider>
-            </AuthProvider>
-        );
+        const { container } = renderPhotoGallery();
 
         await waitFor(() =>
             expect(screen.queryByText(/Loading photographs.../i)).not.toBeInTheDocument()
@@ -234,3 +199,15 @@ describe("PhotoGallery", () => {
         });
     });
 });
+
+const renderPhotoGallery = () => {
+    return render(
+        <AuthProvider>
+            <PhotographProvider>
+                <PhotographSelectionProvider>
+                    <PhotoGallery />
+                </PhotographSelectionProvider>
+            </PhotographProvider>
+        </AuthProvider>
+    );
+};

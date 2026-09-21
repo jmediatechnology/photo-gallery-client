@@ -1,0 +1,8 @@
+
+.selection-rectangle {
+    position: absolute;
+    z-index: 10;
+    pointer-events: none;
+    border: 1px solid DodgerBlue;
+    background-color: rgba(30, 144, 255, 0.15);
+}

@@ -1,36 +1,41 @@
+import * as React from "react";
 import type {PhotographDTO} from "../../types";
 import {api} from "../../api/config.ts";
 import {FaTrashAlt} from "react-icons/fa";
 import {MdModeEdit} from "react-icons/md";
 import {useAuth} from "../../auth/AuthContext.tsx";
+import {PHOTOGRAPH_UUID_ATTRIBUTE} from "../../hooks/useRectangularSelection.tsx";
 
 interface PhotographProps {
     photograph: PhotographDTO,
+    isSelected: boolean,
     onSelect: (photograph: PhotographDTO) => void,
     onSelectForEdit: (photograph: PhotographDTO) => void,
     onSelectForDelete: (photograph: PhotographDTO) => void,
 }
 
-export const Photograph = ({
-    photograph,
-    onSelect,
-    onSelectForEdit,
-    onSelectForDelete,
-}: PhotographProps) => {
+const PhotographItem = ({
+                            photograph,
+                            isSelected,
+                            onSelect,
+                            onSelectForEdit,
+                            onSelectForDelete,
+                        }: PhotographProps) => {
 
     const { roles } = useAuth();
 
     return (
         <div
-            key={photograph.uuid}
-            className="photo-gallery-item"
+            className={`photo-gallery-item${isSelected ? ' photo-gallery-item--selected' : ''}`}
             tabIndex={0}
             onKeyDown={(e) => e.key === 'Enter' && onSelect(photograph)}
+            {...{[PHOTOGRAPH_UUID_ATTRIBUTE]: photograph.uuid}}
         >
             <img
                 src={api.url(photograph.filePath)}
                 alt={photograph.title}
                 loading="lazy"
+                draggable={false}
                 onClick={() => onSelect(photograph)}
             />
             <div className="photo-gallery-item-info" onClick={() => onSelect(photograph)}>
@@ -48,3 +53,5 @@ export const Photograph = ({
         </div>
     );
 };
+
+export const Photograph = React.memo(PhotographItem);

@@ -1,25 +1,51 @@
+/*
+ * The rectangular-selection surface. flex: 1 stretches it to fill the space
+ * below the navbar inside the .app column, so a drag can start anywhere under
+ * the navbar. This relies on PhotoGallery returning a fragment, which makes
+ * this element a direct child of .app.
+ */
+.photo-gallery-wrapper {
+    position: relative;
+    flex: 1;
+    padding: 24px;
+}
+
+.photo-gallery-wrapper--selecting {
+    user-select: none;
+}
 
 .photo-gallery {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 24px;
-    padding: 24px;
 }
 
 .photo-gallery-item {
     border-radius: 12px;
     overflow: hidden;
-    background: #222;                    /* keeps the card frame black */
+    background: #222; /* keeps the card frame black */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
     display: flex;
-    flex-direction: column;              /* ensures image + info stack properly */
+    flex-direction: column; /* ensures image + info stack properly */
 }
 
 .photo-gallery-item:hover {
     transform: translateY(-8px);
     box-shadow: 0 20px 32px rgba(0, 0, 0, 0.15);
+}
+
+.photo-gallery-item--selected {
+    outline: 2px solid DodgerBlue;
+    outline-offset: -2px;
+}
+
+/* During a drag, freeze hover so the visual and measured positions stay equal. */
+.photo-gallery-wrapper--selecting .photo-gallery-item,
+.photo-gallery-wrapper--selecting .photo-gallery-item:hover,
+.photo-gallery-wrapper--selecting .photo-gallery-item:hover img {
+    transform: none;
 }
 
 .photo-gallery-item img {
@@ -37,7 +63,7 @@
     padding: 16px;
     background-color: #242424;
     color: white;
-    flex-grow: 1;                        /* pushes content nicely in flex layout */
+    flex-grow: 1; /* pushes content nicely in flex layout */
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
 }
@@ -51,7 +77,7 @@
 
 .photo-gallery-item-info p.description {
     margin: 0;
-    color: rgba(255, 255, 255, 0.85);     /* slightly soft white for better readability */
+    color: rgba(255, 255, 255, 0.85); /* slightly soft white for better readability */
     font-size: 0.95rem;
     line-height: 1.5;
 }
@@ -72,24 +98,31 @@
     background-color: #1a1a1a;
     cursor: pointer;
 }
+
 .photo-gallery-actions button:hover {
     border-color: #646cff;
 }
+
 .photo-gallery-actions button:hover:first-child {
     border-bottom-left-radius: 12px;
 }
+
 .photo-gallery-actions button:hover:last-child {
     border-bottom-right-radius: 12px;
 }
+
 .photo-gallery-actions button:focus,
 .photo-gallery-actions button:focus-visible {
     outline: 4px auto -webkit-focus-ring-color;
 }
 
 @media (max-width: 640px) {
+    .photo-gallery-wrapper {
+        padding: 16px;
+    }
+
     .photo-gallery {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        padding: 16px;
         gap: 16px;
     }
 }

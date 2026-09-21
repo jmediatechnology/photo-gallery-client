@@ -1,0 +1,78 @@
+/*
+ * Scoped widening of the shared .modal-content: the compound selector wins over
+ * the global rule without affecting the other modals. border-box keeps the
+ * 32px padding inside the width, so the modal never exceeds the viewport.
+ */
+.modal-content.selection-delete-modal {
+    box-sizing: border-box;
+    width: min(720px, calc(100vw - 32px));
+    max-width: none;
+}
+
+.selection-delete-list {
+    list-style: none;
+    margin: 16px 0;
+    padding: 0;
+    max-height: 50vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+}
+
+.selection-delete-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.selection-delete-item--deleted {
+    opacity: 0.5;
+}
+
+.selection-delete-item img {
+    flex-shrink: 0;
+    width: 64px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.selection-delete-item-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+/* Titles wrap rather than truncate: a delete confirmation should show exactly what gets deleted. */
+.selection-delete-item-title {
+    overflow-wrap: anywhere;
+}
+
+.selection-delete-item-error {
+    margin-right: 8px;
+    color: #f44336;
+    font-size: 0.85rem;
+}
+
+.selection-delete-item-status {
+    flex-shrink: 0;
+    margin-right: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.selection-delete-item-status--pending {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.selection-delete-item-status--deleted {
+    color: #4caf50;
+}
+
+.selection-delete-item-status--failed {
+    color: #f44336;
+}
