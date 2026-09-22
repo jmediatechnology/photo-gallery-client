@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
     const authContext = useContext(AuthContext);
     if (!authContext) throw new Error("useAuth must be used inside AuthProvider");
     return authContext;
