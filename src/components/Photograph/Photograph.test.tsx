@@ -3,7 +3,7 @@ import {Photograph} from "./Photograph.tsx";
 import type {PhotographDTO} from "../../types";
 import {vi} from "vitest";
 import {PhotographProvider} from "../../context/PhotographContext.tsx";
-import {AuthProvider} from "../../auth/AuthContext.tsx";
+import {AuthProvider} from "../../context/AuthContext.tsx";
 
 vi.mock("../../api/config", () => ({
     api: {

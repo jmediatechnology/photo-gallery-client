@@ -3,7 +3,7 @@ import './NavBar.css';
 import * as React from "react";
 import {FaTrashAlt} from "react-icons/fa";
 import {LoginModal} from "../LoginModal/LoginModal.tsx";
-import {useAuth} from "../../auth/AuthContext.tsx";
+import {useAuth} from "../../context/AuthContext.tsx";
 import {PhotographUploadModal} from "../PhotographUploadModal/PhotographUploadModal.tsx";
 import {PhotographSelectionDeleteModal} from "../PhotographSelectionDeleteModal/PhotographSelectionDeleteModal.tsx";
 import {usePhotographSelection} from "../../context/PhotographSelectionContext.tsx";

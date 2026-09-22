@@ -1,7 +1,7 @@
 import React from "react";
 import {api} from "../../api/config.ts";
 import type {PhotographDTO} from "../../types";
-import {useAuth} from "../../auth/AuthContext.tsx";
+import {useAuth} from "../../context/AuthContext.tsx";
 import {deletePhotograph} from "../../api/client.ts";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
 import {useEscape} from "../../hooks/useEscape.tsx";

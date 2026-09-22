@@ -3,7 +3,7 @@ import type {PhotographDTO} from "../../types";
 import {api} from "../../api/config.ts";
 import {FaTrashAlt} from "react-icons/fa";
 import {MdModeEdit} from "react-icons/md";
-import {useAuth} from "../../auth/AuthContext.tsx";
+import {useAuth} from "../../context/AuthContext.tsx";
 import {PHOTOGRAPH_UUID_ATTRIBUTE} from "../../hooks/useRectangularSelection.tsx";
 
 interface PhotographProps {

@@ -4,7 +4,7 @@ import type {PhotographDTO} from "../../types";
 import {api} from "../../api/config.ts";
 import {deletePhotograph} from "../../api/client.ts";
 import {extractErrorMessage} from "../../api/error.ts";
-import {useAuth} from "../../auth/AuthContext.tsx";
+import {useAuth} from "../../context/AuthContext.tsx";
 import {useEscape} from "../../hooks/useEscape.tsx";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
 import {usePhotographSelection} from "../../context/PhotographSelectionContext.tsx";

@@ -1,11 +1,11 @@
 import {fireEvent, render, screen} from "@testing-library/react";
 import {afterEach, beforeEach, describe, expect, test, vi, type Mock} from "vitest";
 import type {PhotographDTO} from "../../types";
-import {useAuth} from "../../auth/AuthContext.tsx";
+import {useAuth} from "../../context/AuthContext.tsx";
 import {usePhotographSelection} from "../../context/PhotographSelectionContext.tsx";
 import {NavBar} from "./NavBar.tsx";
 
-vi.mock("../../auth/AuthContext.tsx", () => ({
+vi.mock("../../context/AuthContext.tsx", () => ({
     useAuth: vi.fn(),
 }));
 

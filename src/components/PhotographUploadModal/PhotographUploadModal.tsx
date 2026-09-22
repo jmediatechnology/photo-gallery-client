@@ -1,6 +1,6 @@
 import * as React from "react";
 import {postPhotograph} from "../../api/client.ts";
-import {useAuth} from "../../auth/AuthContext.tsx";
+import {useAuth} from "../../context/AuthContext.tsx";
 import type {PhotographDTO} from "../../types";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
 import {useEscape} from "../../hooks/useEscape.tsx";

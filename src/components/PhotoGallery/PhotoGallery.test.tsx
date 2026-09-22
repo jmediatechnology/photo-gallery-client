@@ -2,7 +2,7 @@ import {fireEvent, render, screen, waitFor, within} from "@testing-library/react
 import { PhotoGallery } from "./PhotoGallery";
 import { vi, type Mock } from "vitest";
 import { getPhotographs } from "../../api/client";
-import {AuthProvider} from "../../auth/AuthContext.tsx";
+import {AuthProvider} from "../../context/AuthContext.tsx";
 import {PhotographProvider} from "../../context/PhotographContext.tsx";
 import {PhotographSelectionProvider} from "../../context/PhotographSelectionContext.tsx";
 

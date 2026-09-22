@@ -16,7 +16,7 @@ vi.mock("../../api/config.ts", () => ({
     },
 }));
 
-vi.mock("../../auth/AuthContext.tsx", () => ({
+vi.mock("../../context/AuthContext.tsx", () => ({
     useAuth: () => ({token: 'test-token'}),
 }));
 

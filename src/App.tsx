@@ -1,7 +1,7 @@
 import './App.css'
 import {PhotoGallery} from "./components/PhotoGallery/PhotoGallery.tsx";
 import {NavBar} from "./components/NavBar/NavBar.tsx";
-import {AuthProvider} from "./auth/AuthContext.tsx";
+import {AuthProvider} from "./context/AuthContext.tsx";
 import {PhotographProvider} from "./context/PhotographContext.tsx";
 import {PhotographSelectionProvider} from "./context/PhotographSelectionContext.tsx";
 
