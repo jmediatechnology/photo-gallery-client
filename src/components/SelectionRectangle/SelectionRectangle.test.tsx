@@ -22,11 +22,6 @@ describe('SelectionRectangle', () => {
         expect(getSelectionRectangle()).toHaveStyle({width: '0px', height: '0px'});
     });
 
-    /*
-     * The class carries the styles the overlay depends on: absolute positioning
-     * inside the selection surface, and pointer-events: none so it never
-     * intercepts the mouse during a drag.
-     */
     test('carries the selection-rectangle class', () => {
         render(<SelectionRectangle rectangle={{left: 10, top: 20, right: 110, bottom: 70}} />);
 
