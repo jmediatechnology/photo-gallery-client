@@ -1,6 +1,6 @@
 import * as React from "react";
 import {postLogin} from "../../api/client.ts";
-import {useAuth} from "../../auth/AuthContext.tsx";
+import {useAuth} from "../../context/AuthContext.tsx";
 import './loginModal.css'
 import {extractErrorMessage} from "../../api/error.ts";
 

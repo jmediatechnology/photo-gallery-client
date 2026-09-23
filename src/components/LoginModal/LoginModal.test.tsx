@@ -1,7 +1,7 @@
 import {render, screen} from "@testing-library/react";
 import {LoginModal} from "./LoginModal.tsx";
 import {vi} from "vitest";
-import {AuthProvider} from "../../auth/AuthContext.tsx";
+import {AuthProvider} from "../../context/AuthContext.tsx";
 import {PhotographProvider} from "../../context/PhotographContext.tsx";
 
 const mockOnClose = vi.fn();

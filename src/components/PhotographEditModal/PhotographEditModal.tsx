@@ -1,7 +1,7 @@
 import * as React from "react";
 import type {PhotographDTO} from "../../types";
 import {patchPhotograph, postGenerateDescription} from "../../api/client.ts";
-import {useAuth} from "../../auth/AuthContext.tsx";
+import {useAuth} from "../../context/AuthContext.tsx";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
 import {useEscape} from "../../hooks/useEscape.tsx";
 import './PhotoGraphEditModal.css';

@@ -6,15 +6,26 @@ import type { PhotographDTO } from "../../types";
 import {PhotographShowModal} from "../PhotographShowModal/PhotographShowModal.tsx";
 import {PhotographDeleteModal} from "../PhotographDeleteModal/PhotographDeleteModal.tsx";
 import {PhotographEditModal} from "../PhotographEditModal/PhotographEditModal.tsx";
+import {SelectionRectangle} from "../SelectionRectangle/SelectionRectangle.tsx";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
+import {usePhotographSelection} from "../../context/PhotographSelectionContext.tsx";
 import {Photograph} from "../Photograph/Photograph.tsx";
 import {useKeyboardNavigation} from "../../hooks/useKeyboardNavigation.tsx";
+import {useRectangularSelection} from "../../hooks/useRectangularSelection.tsx";
 
 export const PhotoGallery = () => {
     const {photographs, isLoading, error} = usePhotographs();
     const [selectedPhoto, setSelectedPhoto] = React.useState<PhotographDTO | null | undefined>(null);
     const [selectedPhotoToBeDeleted, setSelectedPhotoToBeDeleted] = React.useState<PhotographDTO | null>(null);
     const [selectedPhotoToBeEdited, setSelectedPhotoToBeEdited] = React.useState<PhotographDTO | null>(null);
+
+    const {selectedPhotographUuids, replaceSelection} = usePhotographSelection();
+    const {
+        containerRef,
+        selectionRectangle,
+        isSelecting,
+        onMouseDown,
+    } = useRectangularSelection({onSelectionChange: replaceSelection});
 
     const selectedPhotoIndex: number = photographs.findIndex((element: PhotographDTO) => {
         return element.uuid === selectedPhoto?.uuid;
@@ -44,28 +55,37 @@ export const PhotoGallery = () => {
 
     return (
         <>
-            <div className="photo-gallery">
-                {photographs.map((photograph: PhotographDTO, index: number) => (
-                    <Photograph
-                        key={index}
-                        photograph={photograph}
-                        onSelect={setSelectedPhoto}
-                        onSelectForEdit={setSelectedPhotoToBeEdited}
-                        onSelectForDelete={setSelectedPhotoToBeDeleted}
-                    />
-                ))}
+            <div
+                ref={containerRef}
+                className={`photo-gallery-wrapper${isSelecting ? ' photo-gallery-wrapper--selecting' : ''}`}
+                onMouseDown={onMouseDown}
+                data-testid="photo-gallery-wrapper"
+            >
+                <div className="photo-gallery">
+                    {photographs.map((photograph: PhotographDTO) => (
+                        <Photograph
+                            key={photograph.uuid}
+                            photograph={photograph}
+                            isSelected={selectedPhotographUuids.has(photograph.uuid)}
+                            onSelect={setSelectedPhoto}
+                            onSelectForEdit={setSelectedPhotoToBeEdited}
+                            onSelectForDelete={setSelectedPhotoToBeDeleted}
+                        />
+                    ))}
+                </div>
+
+                {selectionRectangle && (
+                    <SelectionRectangle rectangle={selectionRectangle} />
+                )}
             </div>
 
             {selectedPhoto && (
-                <>
-                    <PhotographShowModal
-                        photo={selectedPhoto}
-                        onClose={() => setSelectedPhoto(null)}
-                        onSelect={setSelectedPhoto}
-                    >
-                    </PhotographShowModal>
-                </>
-
+                <PhotographShowModal
+                    photo={selectedPhoto}
+                    onClose={() => setSelectedPhoto(null)}
+                    onSelect={setSelectedPhoto}
+                >
+                </PhotographShowModal>
             )}
 
             {selectedPhotoToBeDeleted && (

@@ -25,3 +25,12 @@ Run test by test name:
 ```
 npm run test -- --testNamePattern "Photograph"
 ```
+
+Run code coverage:
+```
+npm run test -- --coverage
+```
+The command will display a code coverage report in the cli. 
+
+It also creates a coverage directory containing the code coverage results in `/coverage/index.html`.
+The code coverage report can be opened in a Browser. 

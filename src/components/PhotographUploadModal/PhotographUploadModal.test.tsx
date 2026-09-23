@@ -2,13 +2,13 @@ import {render, screen, waitFor} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {PhotographUploadModal} from "./PhotographUploadModal.tsx";
 import {afterEach, type Mock, vi} from "vitest";
-import {AuthProvider} from "../../auth/AuthContext.tsx";
+import {AuthProvider} from "../../context/AuthContext.tsx";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
 import {postPhotograph} from "../../api/client.ts";
 import type {PhotographDTO} from "../../types";
 import {createAxiosError} from "../../../tests/utils/createAxiosError.ts";
 
-vi.mock(import('../../auth/AuthContext'), async (importOriginal) => {
+vi.mock(import('../../context/AuthContext.tsx'), async (importOriginal) => {
     const actual = await importOriginal();
     return {
         ...actual,

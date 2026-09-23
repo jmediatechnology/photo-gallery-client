@@ -21,16 +21,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [roles, setRoles] = useState<string[] | null>(null);
 
     const setToken = (jwtToken: string | null) => {
-        setTokenState(jwtToken);
+        // Decode before touching any state: jwtDecode throws on an invalid token,
+        // and token, username and roles must never disagree.
+        const payload: JwtPayload | null = jwtToken ? jwtDecode<JwtPayload>(jwtToken) : null;
 
-        if (jwtToken) {
-            const payload: JwtPayload = jwtDecode(jwtToken);
-            setUsername(payload.username ?? null);
-            setRoles(payload.roles ?? null);
-        } else {
-            setUsername(null);
-            setRoles(null);
-        }
+        setTokenState(jwtToken);
+        setUsername(payload?.username ?? null);
+        setRoles(payload?.roles ?? null);
     };
 
     return (
@@ -41,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
     const authContext = useContext(AuthContext);
     if (!authContext) throw new Error("useAuth must be used inside AuthProvider");
     return authContext;

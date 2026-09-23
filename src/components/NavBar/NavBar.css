@@ -4,10 +4,6 @@
     align-items: center;
     background-color: #1a1a1a;
     color: #fff;
-    margin: 24px 24px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    border-radius: 12px;
 }
 
 .navbar-left {
@@ -48,6 +44,26 @@
 }
 
 .nav-links a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.navbar-selection {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    margin-left: 1.5em;
+}
+
+.navbar-selection-count {
+    color: DodgerBlue;
+    font-weight: 600;
+}
+
+.navbar-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
     color: #fff;
     text-decoration: none;
 }

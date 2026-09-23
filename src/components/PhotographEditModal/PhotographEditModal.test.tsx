@@ -3,11 +3,11 @@ import userEvent from '@testing-library/user-event';
 import {PhotographEditModal} from "./PhotographEditModal.tsx";
 import {afterEach, type Mock, vi} from "vitest";
 import type {PhotographDTO} from "../../types";
-import {AuthProvider} from "../../auth/AuthContext.tsx";
+import {AuthProvider} from "../../context/AuthContext.tsx";
 import {PhotographProvider} from "../../context/PhotographContext.tsx";
 import {getPhotographs, patchPhotograph, postGenerateDescription} from '../../api/client';
 
-vi.mock(import('../../auth/AuthContext'), async (importOriginal) => {
+vi.mock(import('../../context/AuthContext.tsx'), async (importOriginal) => {
     const actual = await importOriginal();
     return {
         ...actual,

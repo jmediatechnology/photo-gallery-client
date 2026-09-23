@@ -2,11 +2,11 @@ import {fireEvent, render, screen, waitFor} from "@testing-library/react";
 import {PhotographDeleteModal} from "./PhotographDeleteModal.tsx";
 import type {PhotographDTO} from "../../types";
 import {afterEach, type Mock, vi} from "vitest";
-import {AuthProvider} from "../../auth/AuthContext.tsx";
+import {AuthProvider} from "../../context/AuthContext.tsx";
 import {PhotographProvider, usePhotographs} from "../../context/PhotographContext.tsx";
 import {deletePhotograph, getPhotographs} from "../../api/client.ts";
 
-vi.mock(import('../../auth/AuthContext'), async (importOriginal) => {
+vi.mock(import('../../context/AuthContext.tsx'), async (importOriginal) => {
     const actual = await importOriginal();
     return {
         ...actual,
