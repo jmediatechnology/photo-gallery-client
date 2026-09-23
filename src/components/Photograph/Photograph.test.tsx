@@ -29,7 +29,13 @@ describe('Photograph', () => {
         render(
             <AuthProvider>
                 <PhotographProvider>
-                    <Photograph photograph={mockPhoto} onSelect={mockOnSelect} onSelectForEdit={mockOnSelectEdit} onSelectForDelete={mockOnSelectDelete}/>
+                    <Photograph
+                        photograph={mockPhoto}
+                        isSelected={true}
+                        onSelect={mockOnSelect}
+                        onSelectForEdit={mockOnSelectEdit}
+                        onSelectForDelete={mockOnSelectDelete}
+                    />
                 </PhotographProvider>
             </AuthProvider>
         );
