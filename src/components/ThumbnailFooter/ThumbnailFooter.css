@@ -1,10 +1,31 @@
+/*
+ * Thumbnail strip: at most 7 square thumbnails.
+ *
+ * Sized as if there are always 7, so the size doesn't jump when there are fewer;
+ * fewer thumbnails are centered. 100% is the strip's own width (not 100vw), so
+ * modal padding and gutters are accounted for automatically.
+ */
 
-.modal-footer {
+.thumbnail-footer {
+    --thumbnail-count: 7;
+    --thumbnail-gap: 6px;
+    --thumbnail-max-size: 96px;
+    --thumbnail-fill-size: calc(
+            (100% - (var(--thumbnail-count) - 1) * var(--thumbnail-gap)) / var(--thumbnail-count)
+    );
+
     display: flex;
     justify-content: center;
+    gap: var(--thumbnail-gap);
 }
 
-.modal-footer img {
-    max-height: 15vh;
-    object-fit: contain;
+.thumbnail-footer img {
+    flex: 0 0 auto;
+    /* Height cap for landscape phones, where 96px would take a quarter of the screen. */
+    width: min(var(--thumbnail-max-size), var(--thumbnail-fill-size), 12vh);
+    width: min(var(--thumbnail-max-size), var(--thumbnail-fill-size), 12svh);
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    cursor: pointer;
 }

@@ -60,7 +60,7 @@ export const PhotographShowModal: React.FC<PhotographModalProps> = ({ photo, onC
 
                 </div>
 
-                <div>
+                <div className="modal-footer">
                     <ThumbnailFooter photographs={photographs} offset={selectedPhotoIndex} onSelect={onSelect}/>
                     <ActionFooter isPlaying={isPlaying} onToggleSlideshow={toggleSlideshow}/>
                 </div>

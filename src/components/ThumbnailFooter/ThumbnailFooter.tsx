@@ -32,7 +32,7 @@ export const ThumbnailFooter = ({ photographs, offset, onSelect }: ThumbnailFoot
     ]);
 
     return (
-        <div data-testid="thumbnail-footer" className='modal-footer'>
+        <div data-testid="thumbnail-footer" className='thumbnail-footer'>
             {photographsForThumbnailFooter.uniq().map((photograph: PhotographDTO | undefined, index): React.ReactElement | null => {
                 if (photograph === undefined) {
                     return null;
