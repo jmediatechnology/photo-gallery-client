@@ -49,6 +49,11 @@ describe('error', () => {
         expect(extractErrorMessage(error, 'Fallback error message')).toBe('Fallback error message');
     });
 
+    test('returns axios error response errors when message and title are absent', () => {
+        const error = createAxiosError({ errors: 'Title is already in use.' });
+        expect(extractErrorMessage(error, 'Fallback error message')).toBe('Title is already in use.');
+    });
+
     test('returns fallback for null', () => {
         expect(extractErrorMessage(null, 'Fallback error message')).toBe('Fallback error message');
     });
