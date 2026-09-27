@@ -7,6 +7,9 @@ ARG NGINX_VERSION=alpine3.22
 # Use a lightweight Node.js image for building (customizable via ARG)
 FROM --platform=$BUILDPLATFORM node:${NODE_VERSION} AS builder
 
+# Baked into the static bundle at build time by Vite (import.meta.env.VITE_API_URL)
+ARG VITE_API_URL
+
 # Set the working directory inside the container
 WORKDIR /app
 
