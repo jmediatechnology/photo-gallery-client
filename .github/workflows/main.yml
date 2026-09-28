@@ -101,7 +101,7 @@ jobs:
           username: ${{ vars.HETZNER_USER }}
           key: ${{ secrets.HETZNER_SSH_KEY }}
           script: |
-            cd ~/photo-gallery-client
+            cd ~/photo-gallery-deploy
             docker compose pull react-prod
             docker compose up -d react-prod
             docker image prune -f
