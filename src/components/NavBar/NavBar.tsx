@@ -8,6 +8,8 @@ import {PhotographUploadModal} from "../PhotographUploadModal/PhotographUploadMo
 import {PhotographSelectionDeleteModal} from "../PhotographSelectionDeleteModal/PhotographSelectionDeleteModal.tsx";
 import {usePhotographSelection} from "../../context/PhotographSelectionContext.tsx";
 import {useDeleteKeyboardKey} from "../../hooks/useDeleteKeyboardKey.tsx";
+import {PhotographTitleSearch} from "../PhotographTitleSearch/PhotographTitleSearch.tsx";
+import {usePhotographs} from "../../context/PhotographContext.tsx";
 
 export const NavBar = () => {
 
@@ -15,6 +17,7 @@ export const NavBar = () => {
     const [isOpenUploadModal, setIsOpenUploadModal] = React.useState<boolean>(false);
     const [isOpenSelectionDeleteModal, setIsOpenSelectionDeleteModal] = React.useState<boolean>(false);
     const { username, roles } = useAuth();
+    const { searchPhotographsByTitle } = usePhotographs();
     const { selectedPhotographs } = usePhotographSelection();
 
     const isAdmin = Boolean(roles?.includes('ROLE_ADMIN'));
@@ -37,6 +40,7 @@ export const NavBar = () => {
                     <div className='logo'>
                         <Logo />
                     </div>
+                    <PhotographTitleSearch onSearch={searchPhotographsByTitle} />
                     {amountOfSelectedPhotographs > 0 && (
                         <div className="navbar-selection">
                             <span className="navbar-selection-count" data-testid="navbar-selection-count">

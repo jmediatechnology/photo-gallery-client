@@ -1,12 +1,13 @@
 import {beforeEach, describe, expect, test, vi} from "vitest";
 import type {PhotographDTO} from "../types";
+import type {AxiosRequestConfig} from "axios";
 
 /*
  * vi.hoisted keeps one set of axios mocks alive across vi.resetModules(), so
  * the freshly imported client and the assertions share the same functions.
  */
 const axiosMock = vi.hoisted(() => ({
-    get: vi.fn(),
+    get: vi.fn<(url: string, config?: AxiosRequestConfig) => Promise<unknown>>(),
     post: vi.fn(),
     patch: vi.fn(),
     delete: vi.fn(),
@@ -164,4 +165,55 @@ describe('api client', () => {
             {headers: {Authorization: 'Bearer admin-token'}}
         );
     });
+
+    test('getPhotographs filters on the given title', async () => {
+        mockAnonymousTokenAndPhotographs([SUNSET]);
+
+        const photographs = await client.getPhotographs({title: 'Sun'});
+
+        expect(photographs).toEqual([SUNSET]);
+        expect(photographsRequestConfig().params).toEqual({title: 'Sun'});
+    });
+
+    test('getPhotographs trims the title before filtering', async () => {
+        mockAnonymousTokenAndPhotographs([SUNSET]);
+
+        await client.getPhotographs({title: '  Sun  '});
+
+        expect(photographsRequestConfig().params).toEqual({title: 'Sun'});
+    });
+
+    test.each(['', '   '])('getPhotographs does not filter on a blank title (%j)', async (title: string) => {
+        mockAnonymousTokenAndPhotographs([SUNSET]);
+
+        await client.getPhotographs({title});
+
+        expect(photographsRequestConfig().params).toBeUndefined();
+    });
+
+    test('getPhotographs passes the abort signal on to the request', async () => {
+        mockAnonymousTokenAndPhotographs([SUNSET]);
+        const controller = new AbortController();
+
+        await client.getPhotographs({signal: controller.signal});
+
+        expect(photographsRequestConfig().signal).toBe(controller.signal);
+    });
 });
+
+const mockAnonymousTokenAndPhotographs = (photographs: PhotographDTO[]): void => {
+    axiosMock.get.mockImplementation((url: string) => {
+        return url.endsWith('/api/login/anonymous')
+            ? Promise.resolve({data: {token: 'anonymous-token'}})
+            : Promise.resolve({data: photographs});
+    });
+};
+
+const photographsRequestConfig = (): AxiosRequestConfig => {
+    const photographsCall = axiosMock.get.mock.calls.find(([url]) => url.endsWith('/photographs'));
+    const config = photographsCall?.[1];
+    if (!config) {
+        throw new Error('getPhotographs did not request /photographs with a config');
+    }
+    return config;
+};

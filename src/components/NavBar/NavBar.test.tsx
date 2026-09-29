@@ -4,9 +4,14 @@ import type {PhotographDTO} from "../../types";
 import {useAuth} from "../../context/AuthContext.tsx";
 import {usePhotographSelection} from "../../context/PhotographSelectionContext.tsx";
 import {NavBar} from "./NavBar.tsx";
+import {usePhotographs} from "../../context/PhotographContext.tsx";
 
 vi.mock("../../context/AuthContext.tsx", () => ({
     useAuth: vi.fn(),
+}));
+
+vi.mock("../../context/PhotographContext.tsx", () => ({
+    usePhotographs: vi.fn(),
 }));
 
 vi.mock("../../context/PhotographSelectionContext.tsx", () => ({
@@ -27,11 +32,14 @@ vi.mock("../PhotographSelectionDeleteModal/PhotographSelectionDeleteModal.tsx", 
 }));
 
 const mockedUseAuth = useAuth as Mock;
+const mockedUsePhotographs = usePhotographs as Mock;
 const mockedUsePhotographSelection = usePhotographSelection as Mock;
 
 const ANONYMOUS = {username: null, roles: null, token: null};
 const ADMIN = {username: 'admin', roles: ['ROLE_ADMIN'], token: 'test-token'};
 const USER = {username: 'user', roles: ['ROLE_USER'], token: 'test-token'};
+
+const searchPhotographsByTitle = vi.fn();
 
 let unrelatedModals: HTMLElement[] = [];
 
@@ -42,6 +50,7 @@ describe('NavBar', () => {
 
     beforeEach(() => {
         mockedUseAuth.mockReturnValue(ANONYMOUS);
+        mockedUsePhotographs.mockReturnValue({searchPhotographsByTitle});
         selectPhotographs([]);
     });
 
@@ -139,6 +148,15 @@ describe('NavBar', () => {
         pressDeleteKey();
 
         expect(screen.queryByTestId('selection-delete-modal')).not.toBeInTheDocument();
+    });
+
+    test('lets every visitor search photographs by title', () => {
+        render(<NavBar />);
+
+        fireEvent.change(screen.getByRole('searchbox', {name: 'Search photographs by title'}), {target: {value: 'Sun'}});
+        fireEvent.submit(screen.getByRole('search'));
+
+        expect(searchPhotographsByTitle).toHaveBeenCalledWith('Sun');
     });
 });
 

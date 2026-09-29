@@ -1,0 +1,53 @@
+.photograph-title-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.photograph-title-search-icon {
+    position: absolute;
+    left: 0.75em;
+    color: #999;
+    pointer-events: none;
+}
+
+.photograph-title-search-input {
+    width: 16em;
+    padding: 0.5em 2.25em;
+    border: 1px solid #444;
+    border-radius: 999px;
+    background-color: #2a2a2a;
+    color: #fff;
+    font: inherit;
+}
+
+.photograph-title-search-input::placeholder {
+    color: #999;
+}
+
+.photograph-title-search-input:focus-visible {
+    outline: 2px solid DodgerBlue;
+    outline-offset: 1px;
+}
+
+/* Hide the native clear button; the custom one works the same in every browser. */
+.photograph-title-search-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.photograph-title-search-clear {
+    position: absolute;
+    right: 0.5em;
+    display: inline-flex;
+    padding: 0.25em;
+    border: none;
+    background: none;
+    color: #999;
+    cursor: pointer;
+}
+
+.photograph-title-search-clear:hover,
+.photograph-title-search-clear:focus-visible {
+    color: #fff;
+}

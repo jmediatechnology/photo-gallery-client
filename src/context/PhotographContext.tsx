@@ -9,6 +9,7 @@ interface PhotographContextInterface {
     photographs: CircularArray<PhotographDTO>,
     isLoading: boolean,
     error: string,
+    searchPhotographsByTitle: (title: string) => void,
     addPhotograph: (response: PhotographDTO) => void,
     editPhotograph: (response: PhotographDTO) => void,
     removePhotograph: (uuid: string) => void,
@@ -21,17 +22,32 @@ export const PhotographProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const [isLoading, setIsLoading] = React.useState<boolean>(true);
     const [error, setError] = React.useState<string>('');
 
-    React.useEffect((): void => {
-        getPhotographs()
+    const [titleSearchTerm, setTitleSearchTerm] = React.useState<string>('');
+
+    React.useEffect(() => {
+        const abortController = new AbortController();
+        const isSuperseded = (): boolean => abortController.signal.aborted;
+
+        getPhotographs({title: titleSearchTerm, signal: abortController.signal})
             .then((response: PhotographDTO[]) => {
+                if (isSuperseded()) return;
                 setPhotographs(CircularArray.from(response));
+                setError('');
             })
             .catch((response) => {
+                if (isSuperseded()) return;
                 setError(extractErrorMessage(response, 'Failed to get photographs'));
             })
             .finally(() => {
+                if (isSuperseded()) return;
                 setIsLoading(false);
             });
+
+        return () => abortController.abort();
+    }, [titleSearchTerm]);
+
+    const searchPhotographsByTitle = React.useCallback((title: string): void => {
+        setTitleSearchTerm(title.trim());
     }, []);
 
     const addPhotograph = (response: PhotographDTO): void => {
@@ -55,7 +71,7 @@ export const PhotographProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     };
 
     return (
-        <PhotographContext.Provider value={{photographs, isLoading, error, addPhotograph, editPhotograph, removePhotograph}}>
+        <PhotographContext.Provider value={{photographs, isLoading, error, searchPhotographsByTitle, addPhotograph, editPhotograph, removePhotograph}}>
             {children}
         </PhotographContext.Provider>
     );

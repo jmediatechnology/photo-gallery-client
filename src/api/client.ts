@@ -31,12 +31,25 @@ export const postLogin = async({ username, password }: postLoginPayload): Promis
     return response.data.token;
 };
 
-export const getPhotographs = async (): Promise<PhotographDTO[]> => {
+interface getPhotographsInput {
+    title?: string,
+    signal?: AbortSignal,
+}
+
+export const getPhotographs = async ({ title, signal }: getPhotographsInput = {}): Promise<PhotographDTO[]> => {
     const token = await getAnonymousToken();
+
+    const params = (title?: string): { title: string } | undefined => {
+        const trimmedTitle = title?.trim();
+        return trimmedTitle ? { title: trimmedTitle } : undefined;
+    };
+
     const response = await axios.get<PhotographDTO[]>(
         api.url("/photographs"),
         {
             headers: { Authorization: `Bearer ${token}` },
+            params: params(title),
+            signal,
         }
     );
 

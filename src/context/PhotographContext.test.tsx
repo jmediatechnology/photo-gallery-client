@@ -124,6 +124,87 @@ describe('PhotographContext', () => {
             'usePhotographs must be used inside PhotographProvider'
         );
     });
+
+    test('loads all photographs initially without a title filter', async () => {
+        await renderLoadedPhotographs([SUNSET, NIGHT]);
+
+        expect(mockedGetPhotographs).toHaveBeenCalledWith({title: '', signal: expect.any(AbortSignal)});
+    });
+
+    test('searchPhotographsByTitle loads the matching photographs', async () => {
+        const {result} = await renderLoadedPhotographs([SUNSET, NIGHT]);
+        mockedGetPhotographs.mockResolvedValue([SUNSET]);
+
+        act(() => result.current.searchPhotographsByTitle('Sun'));
+
+        await waitFor(() => expect(Array.from(result.current.photographs)).toEqual([SUNSET]));
+        expect(mockedGetPhotographs).toHaveBeenLastCalledWith({title: 'Sun', signal: expect.any(AbortSignal)});
+    });
+
+    test('keeps showing the photographs while a search is loading', async () => {
+        const {result} = await renderLoadedPhotographs([SUNSET, NIGHT]);
+        mockedGetPhotographs.mockReturnValue(new Promise(() => undefined));
+
+        act(() => result.current.searchPhotographsByTitle('Sun'));
+
+        expect(result.current.isLoading).toBe(false);
+        expect(Array.from(result.current.photographs)).toEqual([SUNSET, NIGHT]);
+    });
+
+    test('ignores the response of a superseded search', async () => {
+        const {result} = await renderLoadedPhotographs([SUNSET, NIGHT]);
+        const sunSearch = createDeferred<PhotographDTO[]>();
+        const nightSearch = createDeferred<PhotographDTO[]>();
+        mockedGetPhotographs
+            .mockReturnValueOnce(sunSearch.promise)
+            .mockReturnValueOnce(nightSearch.promise);
+
+        act(() => result.current.searchPhotographsByTitle('Sun'));
+        act(() => result.current.searchPhotographsByTitle('Night'));
+        await act(async () => nightSearch.resolve([NIGHT]));
+        await act(async () => sunSearch.resolve([SUNSET]));
+
+        expect(Array.from(result.current.photographs)).toEqual([NIGHT]);
+        expect(mockedGetPhotographs.mock.calls[1][0].signal.aborted).toBe(true);
+    });
+
+    test('shows no error when a superseded search fails', async () => {
+        const {result} = await renderLoadedPhotographs([SUNSET, NIGHT]);
+        const sunSearch = createDeferred<PhotographDTO[]>();
+        mockedGetPhotographs
+            .mockReturnValueOnce(sunSearch.promise)
+            .mockResolvedValueOnce([NIGHT]);
+
+        act(() => result.current.searchPhotographsByTitle('Sun'));
+        act(() => result.current.searchPhotographsByTitle('Night'));
+        await act(async () => sunSearch.reject(new Error('canceled')));
+
+        await waitFor(() => expect(Array.from(result.current.photographs)).toEqual([NIGHT]));
+        expect(result.current.error).toBe('');
+    });
+
+    test('does not search again for the same trimmed title', async () => {
+        const {result} = await renderLoadedPhotographs([SUNSET, NIGHT]);
+        mockedGetPhotographs.mockResolvedValue([SUNSET]);
+
+        act(() => result.current.searchPhotographsByTitle('Sun'));
+        await waitFor(() => expect(Array.from(result.current.photographs)).toEqual([SUNSET]));
+        act(() => result.current.searchPhotographsByTitle('  Sun  '));
+
+        expect(mockedGetPhotographs).toHaveBeenCalledTimes(2);
+    });
+
+    test('clears the error once a search succeeds', async () => {
+        mockedGetPhotographs.mockRejectedValueOnce(new Error('Network error'));
+        const {result} = renderPhotographs();
+        await waitFor(() => expect(result.current.error).toBe('Network error'));
+        mockedGetPhotographs.mockResolvedValue([SUNSET]);
+
+        act(() => result.current.searchPhotographsByTitle('Sun'));
+
+        await waitFor(() => expect(result.current.error).toBe(''));
+        expect(Array.from(result.current.photographs)).toEqual([SUNSET]);
+    });
 });
 
 const renderPhotographs = () => {
@@ -139,4 +220,15 @@ const renderLoadedPhotographs = async (photographs: PhotographDTO[]) => {
     const rendered = renderPhotographs();
     await waitFor(() => expect(rendered.result.current.isLoading).toBe(false));
     return rendered;
+};
+
+const createDeferred = <T,>() => {
+    let resolve!: (value: T) => void;
+    let reject!: (reason: unknown) => void;
+    const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+        resolve = resolvePromise;
+        reject = rejectPromise;
+    });
+
+    return {promise, resolve, reject};
 };
