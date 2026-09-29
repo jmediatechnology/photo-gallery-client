@@ -1,4 +1,4 @@
-import {fireEvent, render, screen} from "@testing-library/react";
+import {act, fireEvent, render, screen} from "@testing-library/react";
 import {afterEach, beforeEach, describe, expect, test, vi} from "vitest";
 import {PhotographTitleSearch} from "./PhotographTitleSearch.tsx";
 
@@ -11,6 +11,7 @@ describe('PhotographTitleSearch', () => {
     });
 
     afterEach(() => {
+        act(() => vi.runOnlyPendingTimers());
         vi.useRealTimers();
     });
 
