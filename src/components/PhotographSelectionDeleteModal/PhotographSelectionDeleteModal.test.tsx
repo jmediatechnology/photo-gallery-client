@@ -7,7 +7,7 @@ import {usePhotographSelection} from "../../context/PhotographSelectionContext.t
 import {PhotographSelectionDeleteModal} from "./PhotographSelectionDeleteModal.tsx";
 
 vi.mock("../../api/client.ts", () => ({
-    deletePhotograph: vi.fn(),
+    deletePhotograph: vi.fn<() => void>(),
 }));
 
 vi.mock("../../api/config.ts", () => ({
@@ -21,11 +21,11 @@ vi.mock("../../context/AuthContext.tsx", () => ({
 }));
 
 vi.mock("../../context/PhotographContext.tsx", () => ({
-    usePhotographs: vi.fn(),
+    usePhotographs: vi.fn<() => void>(),
 }));
 
 vi.mock("../../context/PhotographSelectionContext.tsx", () => ({
-    usePhotographSelection: vi.fn(),
+    usePhotographSelection: vi.fn<() => void>(),
 }));
 
 const mockedDeletePhotograph = deletePhotograph as Mock;
@@ -37,8 +37,8 @@ const NIGHT = {uuid: '2', title: 'Night', description: '', filePath: '/night.jpg
 
 describe('PhotographSelectionDeleteModal', () => {
 
-    const removePhotograph = vi.fn();
-    const deselectPhotograph = vi.fn();
+    const removePhotograph = vi.fn<() => void>();
+    const deselectPhotograph = vi.fn<() => void>();
 
     beforeEach(() => {
         mockedUsePhotographs.mockReturnValue({removePhotograph});
@@ -53,7 +53,7 @@ describe('PhotographSelectionDeleteModal', () => {
     });
 
     test('lists every selected photograph with its thumbnail and title', () => {
-        render(<PhotographSelectionDeleteModal onClose={vi.fn()} />);
+        render(<PhotographSelectionDeleteModal onClose={vi.fn<() => void>()} />);
 
         expect(screen.getByRole('heading', {name: 'Delete 2 photographs?'})).toBeInTheDocument();
         expect(screen.getByText('Sunset')).toBeInTheDocument();
@@ -64,13 +64,13 @@ describe('PhotographSelectionDeleteModal', () => {
     test('uses the singular in the heading for one photograph', () => {
         mockedUsePhotographSelection.mockReturnValue({selectedPhotographs: [SUNSET], deselectPhotograph});
 
-        render(<PhotographSelectionDeleteModal onClose={vi.fn()} />);
+        render(<PhotographSelectionDeleteModal onClose={vi.fn<() => void>()} />);
 
         expect(screen.getByRole('heading', {name: 'Delete 1 photograph?'})).toBeInTheDocument();
     });
 
     test('closes without deleting anything when cancelled', () => {
-        const onClose = vi.fn();
+        const onClose = vi.fn<() => void>();
         render(<PhotographSelectionDeleteModal onClose={onClose} />);
 
         fireEvent.click(screen.getByRole('button', {name: 'Cancel'}));
@@ -81,7 +81,7 @@ describe('PhotographSelectionDeleteModal', () => {
 
     test('sends one delete request per photograph', () => {
         mockedDeletePhotograph.mockReturnValue(new Promise(() => undefined));
-        render(<PhotographSelectionDeleteModal onClose={vi.fn()} />);
+        render(<PhotographSelectionDeleteModal onClose={vi.fn<() => void>()} />);
 
         fireEvent.click(screen.getByRole('button', {name: 'Delete'}));
 
@@ -92,7 +92,7 @@ describe('PhotographSelectionDeleteModal', () => {
 
     test('marks a deleted photograph and removes it from the gallery and the selection', async () => {
         mockedDeletePhotograph.mockResolvedValue('');
-        render(<PhotographSelectionDeleteModal onClose={vi.fn()} />);
+        render(<PhotographSelectionDeleteModal onClose={vi.fn<() => void>()} />);
 
         fireEvent.click(screen.getByRole('button', {name: 'Delete'}));
 
@@ -105,7 +105,7 @@ describe('PhotographSelectionDeleteModal', () => {
 
     test('shows the error of a failed deletion and keeps the photograph', async () => {
         mockedDeletePhotograph.mockRejectedValue(new Error('Forbidden'));
-        render(<PhotographSelectionDeleteModal onClose={vi.fn()} />);
+        render(<PhotographSelectionDeleteModal onClose={vi.fn<() => void>()} />);
 
         fireEvent.click(screen.getByRole('button', {name: 'Delete'}));
 
@@ -121,7 +121,7 @@ describe('PhotographSelectionDeleteModal', () => {
         mockedDeletePhotograph.mockImplementation(({uuid}: {uuid: string}) => {
             return uuid === '1' ? Promise.resolve('') : Promise.reject(new Error('Forbidden'));
         });
-        render(<PhotographSelectionDeleteModal onClose={vi.fn()} />);
+        render(<PhotographSelectionDeleteModal onClose={vi.fn<() => void>()} />);
 
         fireEvent.click(screen.getByRole('button', {name: 'Delete'}));
 
@@ -138,7 +138,7 @@ describe('PhotographSelectionDeleteModal', () => {
     test('cannot be closed while deletions are pending', async () => {
         const deletion = createDeferred<string>();
         mockedDeletePhotograph.mockReturnValue(deletion.promise);
-        const onClose = vi.fn();
+        const onClose = vi.fn<() => void>();
         render(<PhotographSelectionDeleteModal onClose={onClose} />);
 
         fireEvent.click(screen.getByRole('button', {name: 'Delete'}));
@@ -159,10 +159,10 @@ describe('PhotographSelectionDeleteModal', () => {
     });
 
     test('keeps every row visible when the selection changes after opening', () => {
-        const {rerender} = render(<PhotographSelectionDeleteModal onClose={vi.fn()} />);
+        const {rerender} = render(<PhotographSelectionDeleteModal onClose={vi.fn<() => void>()} />);
 
         mockedUsePhotographSelection.mockReturnValue({selectedPhotographs: [], deselectPhotograph});
-        rerender(<PhotographSelectionDeleteModal onClose={vi.fn()} />);
+        rerender(<PhotographSelectionDeleteModal onClose={vi.fn<() => void>()} />);
 
         expect(screen.getByText('Sunset')).toBeInTheDocument();
         expect(screen.getByText('Night')).toBeInTheDocument();

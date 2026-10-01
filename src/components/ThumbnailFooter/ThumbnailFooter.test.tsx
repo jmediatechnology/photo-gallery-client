@@ -79,7 +79,7 @@ const mockedPhotographs: CircularArray<PhotographDTO> = CircularArray.from([
     },
 ]);
 
-const mockOnSelect = vi.fn();
+const mockOnSelect = vi.fn<() => void>();
 
 
 describe('ThumbnailFooter', () => {

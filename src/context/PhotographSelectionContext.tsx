@@ -25,7 +25,12 @@ export const PhotographSelectionProvider: React.FC<{ children: React.ReactNode }
 
     const replaceSelection = React.useCallback((uuids: Set<string>) => {
         setSelectedPhotographUuids((previous: Set<string>) => {
-            return areSetsEqual(previous, uuids) ? previous : uuids;
+            // useRectangularSelection reports a new Set on every animation frame,
+            // even when the same photographs are selected.
+            // React only skips a re-render when it gets the same reference back,
+            // so when the contents match we return the previous Set instead of the new one.
+            const areSetsEqual = previous.size === uuids.size && previous.isSubsetOf(uuids);
+            return areSetsEqual ? previous : uuids;
         });
     }, []);
 
@@ -71,23 +76,4 @@ export const usePhotographSelection = (): PhotographSelectionContextInterface =>
     const photographSelectionContext = useContext(PhotographSelectionContext);
     if (!photographSelectionContext) throw new Error("usePhotographSelection must be used inside PhotographSelectionProvider");
     return photographSelectionContext;
-};
-
-/**
- * The rubber band reports a brand-new Set on every animation frame, even when
- * nothing changed. Keeping the previous Set in that case stops every consumer
- * from re-rendering at frame rate during a drag.
- */
-const areSetsEqual = (a: Set<string>, b: Set<string>): boolean => {
-    if (a.size !== b.size) {
-        return false;
-    }
-
-    for (const value of a) {
-        if (!b.has(value)) {
-            return false;
-        }
-    }
-
-    return true;
 };

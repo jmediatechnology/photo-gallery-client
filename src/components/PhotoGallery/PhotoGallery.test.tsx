@@ -7,7 +7,7 @@ import {PhotographProvider} from "../../context/PhotographContext.tsx";
 import {PhotographSelectionProvider} from "../../context/PhotographSelectionContext.tsx";
 
 vi.mock("../../api/client", () => ({
-    getPhotographs: vi.fn()
+    getPhotographs: vi.fn<() => void>()
 }));
 
 vi.mock("../../api/config", () => ({

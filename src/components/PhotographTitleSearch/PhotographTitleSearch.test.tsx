@@ -120,7 +120,7 @@ describe('PhotographTitleSearch', () => {
 });
 
 const renderSearch = () => {
-    const onSearch = vi.fn();
+    const onSearch = vi.fn<() => void>();
     const {unmount} = render(<PhotographTitleSearch onSearch={onSearch} />);
     const input = screen.getByRole('searchbox', {name: 'Search photographs by title'});
 

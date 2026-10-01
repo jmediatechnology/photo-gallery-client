@@ -1,16 +1,19 @@
 import {beforeEach, describe, expect, test, vi} from "vitest";
 import type {PhotographDTO} from "../types";
 import type {AxiosRequestConfig} from "axios";
+import {assertIsFormData} from "../../tests/utils/assertions.ts";
+
+type AxiosResponseMock = Promise<{ data: unknown }>;
 
 /*
  * vi.hoisted keeps one set of axios mocks alive across vi.resetModules(), so
  * the freshly imported client and the assertions share the same functions.
  */
 const axiosMock = vi.hoisted(() => ({
-    get: vi.fn<(url: string, config?: AxiosRequestConfig) => Promise<unknown>>(),
-    post: vi.fn(),
-    patch: vi.fn(),
-    delete: vi.fn(),
+    get: vi.fn<(url: string, config?: AxiosRequestConfig) => AxiosResponseMock>(),
+    post: vi.fn<(url: string, data?: unknown, config?: AxiosRequestConfig) => AxiosResponseMock>(),
+    patch: vi.fn<(url: string, data?: unknown, config?: AxiosRequestConfig) => AxiosResponseMock>(),
+    delete: vi.fn<(url: string, config?: AxiosRequestConfig) => AxiosResponseMock>(),
 }));
 
 vi.mock("axios", () => ({
@@ -110,6 +113,7 @@ describe('api client', () => {
         expect(photograph).toEqual(SUNSET);
         const [url, formData, config] = axiosMock.post.mock.calls[0];
         expect(url).toBe('https://api.test/photographs');
+        assertIsFormData(formData);
         expect(formData.get('uuid')).toBe('1');
         expect(formData.get('title')).toBe('Sunset');
         expect(formData.get('description')).toBe('Beautiful sunset');

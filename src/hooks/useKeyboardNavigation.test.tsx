@@ -2,13 +2,15 @@ import { renderHook } from "@testing-library/react";
 import { describe, expect, vi, beforeEach, afterEach } from "vitest";
 import { useKeyboardNavigation } from "./useKeyboardNavigation";
 
+type NavigationHandler = Parameters<typeof useKeyboardNavigation>[0];
+
 describe("useKeyboardNavigation", () => {
-    let onNext: ReturnType<typeof vi.fn>;
-    let onPrev: ReturnType<typeof vi.fn>;
+    let onNext: NavigationHandler;
+    let onPrev: NavigationHandler;
 
     beforeEach(() => {
-        onNext = vi.fn();
-        onPrev = vi.fn();
+        onNext = vi.fn<NavigationHandler>();
+        onPrev = vi.fn<NavigationHandler>();
     });
 
     afterEach(() => {
@@ -56,8 +58,8 @@ describe("useKeyboardNavigation", () => {
     });
 
     test("does not call stale onNext after callback reference changes", () => {
-        const firstOnNext = vi.fn();
-        const secondOnNext = vi.fn();
+        const firstOnNext = vi.fn<NavigationHandler>();
+        const secondOnNext = vi.fn<NavigationHandler>();
 
         const { rerender } = renderHook(
             ({ nextHandler, prevHandler }) => useKeyboardNavigation(nextHandler, prevHandler),
@@ -73,8 +75,8 @@ describe("useKeyboardNavigation", () => {
     });
 
     test("does not call stale onPrev after callback reference changes", () => {
-        const firstOnPrev = vi.fn();
-        const secondOnPrev = vi.fn();
+        const firstOnPrev = vi.fn<NavigationHandler>();
+        const secondOnPrev = vi.fn<NavigationHandler>();
 
         const { rerender } = renderHook(
             ({ nextHandler, prevHandler }) => useKeyboardNavigation(nextHandler, prevHandler),

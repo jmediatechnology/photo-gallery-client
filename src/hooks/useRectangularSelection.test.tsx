@@ -59,7 +59,7 @@ describe('useRectangularSelection', () => {
     });
 
     test('starts a selection on mousedown in empty space and reports an empty selection', () => {
-        const onSelectionChange = vi.fn();
+        const onSelectionChange = vi.fn<() => void>();
         render(<SelectionHarness onSelectionChange={onSelectionChange} />);
 
         pressAt(105, 55);
@@ -69,7 +69,7 @@ describe('useRectangularSelection', () => {
     });
 
     test('does not start a selection on mousedown on a photograph', () => {
-        const onSelectionChange = vi.fn();
+        const onSelectionChange = vi.fn<() => void>();
         render(<SelectionHarness onSelectionChange={onSelectionChange} />);
 
         fireEvent.mouseDown(screen.getByAltText('top-left'), {button: 0, clientX: 150, clientY: 100});
@@ -79,7 +79,7 @@ describe('useRectangularSelection', () => {
     });
 
     test('ignores mousedown with any button other than the left one', () => {
-        const onSelectionChange = vi.fn();
+        const onSelectionChange = vi.fn<() => void>();
         render(<SelectionHarness onSelectionChange={onSelectionChange} />);
 
         fireEvent.mouseDown(getContainer(), {button: 2, clientX: 105, clientY: 55});
@@ -89,7 +89,7 @@ describe('useRectangularSelection', () => {
     });
 
     test('selects every photograph the rectangle covers, including ones the pointer never crossed', async () => {
-        const onSelectionChange = vi.fn();
+        const onSelectionChange = vi.fn<() => void>();
         render(<SelectionHarness onSelectionChange={onSelectionChange} />);
 
         pressAt(105, 55);
@@ -100,7 +100,7 @@ describe('useRectangularSelection', () => {
     });
 
     test('selects only the photographs the rectangle overlaps', async () => {
-        const onSelectionChange = vi.fn();
+        const onSelectionChange = vi.fn<() => void>();
         render(<SelectionHarness onSelectionChange={onSelectionChange} />);
 
         pressAt(105, 55);
@@ -111,7 +111,7 @@ describe('useRectangularSelection', () => {
     });
 
     test('expresses the rectangle in the coordinates of the container content box', async () => {
-        render(<SelectionHarness onSelectionChange={vi.fn()} />);
+        render(<SelectionHarness onSelectionChange={vi.fn<() => void>()} />);
 
         pressAt(105, 55);
         moveTo(205, 155);
@@ -121,7 +121,7 @@ describe('useRectangularSelection', () => {
     });
 
     test('includes the scroll position of the container', async () => {
-        const onSelectionChange = vi.fn();
+        const onSelectionChange = vi.fn<() => void>();
         render(<SelectionHarness onSelectionChange={onSelectionChange} />);
         Object.defineProperty(getContainer(), 'scrollTop', {value: 100, configurable: true});
 
@@ -134,7 +134,7 @@ describe('useRectangularSelection', () => {
     });
 
     test('processes several mousemoves in one animation frame, using the latest position', async () => {
-        const onSelectionChange = vi.fn();
+        const onSelectionChange = vi.fn<() => void>();
         render(<SelectionHarness onSelectionChange={onSelectionChange} />);
 
         pressAt(105, 55);
@@ -150,7 +150,7 @@ describe('useRectangularSelection', () => {
     });
 
     test('ends the selection on mouseup and keeps the selected photographs', async () => {
-        const onSelectionChange = vi.fn();
+        const onSelectionChange = vi.fn<() => void>();
         render(<SelectionHarness onSelectionChange={onSelectionChange} />);
 
         pressAt(105, 55);
@@ -164,7 +164,7 @@ describe('useRectangularSelection', () => {
     });
 
     test('ends the selection when the window loses focus', () => {
-        render(<SelectionHarness onSelectionChange={vi.fn()} />);
+        render(<SelectionHarness onSelectionChange={vi.fn<() => void>()} />);
 
         pressAt(105, 55);
         fireEvent.blur(window);
@@ -173,7 +173,7 @@ describe('useRectangularSelection', () => {
     });
 
     test('stops following the pointer once the selection has ended', async () => {
-        const onSelectionChange = vi.fn();
+        const onSelectionChange = vi.fn<() => void>();
         render(<SelectionHarness onSelectionChange={onSelectionChange} />);
 
         pressAt(105, 55);
@@ -188,7 +188,7 @@ describe('useRectangularSelection', () => {
     });
 
     test('cancels a pending animation frame when the selection ends', async () => {
-        const onSelectionChange = vi.fn();
+        const onSelectionChange = vi.fn<() => void>();
         render(<SelectionHarness onSelectionChange={onSelectionChange} />);
 
         pressAt(105, 55);

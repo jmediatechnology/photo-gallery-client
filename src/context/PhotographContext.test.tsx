@@ -7,7 +7,7 @@ import {CircularArray} from "../data-structures/CircularArray.ts";
 import {PhotographProvider, usePhotographs} from "./PhotographContext.tsx";
 
 vi.mock("../api/client.ts", () => ({
-    getPhotographs: vi.fn(),
+    getPhotographs: vi.fn<() => void>(),
 }));
 
 const mockedGetPhotographs = getPhotographs as Mock;

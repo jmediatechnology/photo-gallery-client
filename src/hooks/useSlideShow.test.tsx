@@ -15,7 +15,7 @@ const createPhotographDTO = (uuid: string, title: string): PhotographDTO => ({
 
 const createPhotographs = (nextPhoto: PhotographDTO | undefined): CircularArray<PhotographDTO> => {
     return {
-        getNext: vi.fn().mockReturnValue(nextPhoto),
+        getNext: vi.fn<CircularArray<PhotographDTO>['getNext']>().mockReturnValue(nextPhoto),
     } as unknown as CircularArray<PhotographDTO>;
 };
 
@@ -35,7 +35,7 @@ describe('useSlideShow', () => {
     });
 
     it('starts paused', () => {
-        const onSelect = vi.fn();
+        const onSelect = vi.fn<() => void>();
         const { result } = renderHook(() => useSlideShow(createPhotographs(mockedPhotographDTO), 0, onSelect));
 
         expect(result.current.isPlaying).toBe(false);
@@ -45,7 +45,7 @@ describe('useSlideShow', () => {
     });
 
     it('toggleSlideshow flips isPlaying on and off', () => {
-        const onSelect = vi.fn();
+        const onSelect = vi.fn<() => void>();
         const { result } = renderHook(() => useSlideShow(createPhotographs(mockedPhotographDTO), 0, onSelect));
 
         act(() => result.current.toggleSlideshow());
@@ -56,7 +56,7 @@ describe('useSlideShow', () => {
     });
 
     it('calls onSelect with the next photograph exactly 5 seconds after starting', () => {
-        const onSelect = vi.fn();
+        const onSelect = vi.fn<() => void>();
         const photographs = createPhotographs(mockedPhotographDTO);
         const { result } = renderHook(() => useSlideShow(photographs, 0, onSelect));
 
@@ -72,7 +72,7 @@ describe('useSlideShow', () => {
     });
 
     it('stops advancing once toggled off before the 5s mark', () => {
-        const onSelect = vi.fn();
+        const onSelect = vi.fn<() => void>();
         const { result } = renderHook(() => useSlideShow(createPhotographs(mockedPhotographDTO), 0, onSelect));
 
         act(() => result.current.toggleSlideshow()); // on
@@ -84,7 +84,7 @@ describe('useSlideShow', () => {
     });
 
     it('restarts the 5s countdown when offset changes while playing (e.g. a manual thumbnail click)', () => {
-        const onSelect = vi.fn();
+        const onSelect = vi.fn<() => void>();
         const photographs = createPhotographs(mockedPhotographDTO);
         const { result, rerender } = renderHook(
             ({ offset }) => useSlideShow(photographs, offset, onSelect),
@@ -105,7 +105,7 @@ describe('useSlideShow', () => {
     });
 
     it('clears the pending timer on unmount', () => {
-        const onSelect = vi.fn();
+        const onSelect = vi.fn<() => void>();
         const { result, unmount } = renderHook(() => useSlideShow(createPhotographs(mockedPhotographDTO), 0, onSelect));
 
         act(() => result.current.toggleSlideshow());
@@ -116,7 +116,7 @@ describe('useSlideShow', () => {
     });
 
     it('does not call onSelect when there is no next photograph', () => {
-        const onSelect = vi.fn();
+        const onSelect = vi.fn<() => void>();
         const { result } = renderHook(() => useSlideShow(createPhotographs(undefined), 0, onSelect));
 
         act(() => result.current.toggleSlideshow());

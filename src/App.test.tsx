@@ -4,7 +4,7 @@ import { getPhotographs } from "./api/client";
 import { vi, type Mock } from "vitest";
 
 vi.mock("./api/client", () => ({
-    getPhotographs: vi.fn()
+    getPhotographs: vi.fn<() => void>()
 }));
 
 const mockedGetPhotographs = getPhotographs as Mock;

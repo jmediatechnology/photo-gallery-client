@@ -7,15 +7,15 @@ import {NavBar} from "./NavBar.tsx";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
 
 vi.mock("../../context/AuthContext.tsx", () => ({
-    useAuth: vi.fn(),
+    useAuth: vi.fn<() => void>(),
 }));
 
 vi.mock("../../context/PhotographContext.tsx", () => ({
-    usePhotographs: vi.fn(),
+    usePhotographs: vi.fn<() => void>(),
 }));
 
 vi.mock("../../context/PhotographSelectionContext.tsx", () => ({
-    usePhotographSelection: vi.fn(),
+    usePhotographSelection: vi.fn<() => void>(),
 }));
 
 /*
@@ -39,7 +39,7 @@ const ANONYMOUS = {username: null, roles: null, token: null};
 const ADMIN = {username: 'admin', roles: ['ROLE_ADMIN'], token: 'test-token'};
 const USER = {username: 'user', roles: ['ROLE_USER'], token: 'test-token'};
 
-const searchPhotographsByTitle = vi.fn();
+const searchPhotographsByTitle = vi.fn<() => void>();
 
 let unrelatedModals: HTMLElement[] = [];
 

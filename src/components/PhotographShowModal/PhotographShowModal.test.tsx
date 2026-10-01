@@ -7,7 +7,7 @@ import {AuthProvider} from "../../context/AuthContext.tsx";
 import {PhotographProvider} from "../../context/PhotographContext.tsx";
 
 vi.mock("../../api/client", () => ({
-    getPhotographs: vi.fn()
+    getPhotographs: vi.fn<() => void>()
 }));
 
 vi.mock("../../api/config", () => ({
@@ -36,8 +36,8 @@ const mockPhotoB = {
     updatedAt: ""
 } satisfies PhotographDTO;
 
-const mockOnClose = vi.fn();
-const mockOnSelect = vi.fn();
+const mockOnClose = vi.fn<() => void>();
+const mockOnSelect = vi.fn<() => void>();
 
 describe('PhotographShowModal', () => {
 

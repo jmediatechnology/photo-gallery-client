@@ -6,7 +6,7 @@ import {usePhotographs} from "./PhotographContext.tsx";
 import {PhotographSelectionProvider, usePhotographSelection} from "./PhotographSelectionContext.tsx";
 
 vi.mock("./PhotographContext.tsx", () => ({
-    usePhotographs: vi.fn(),
+    usePhotographs: vi.fn<() => void>(),
 }));
 
 const mockedUsePhotographs = usePhotographs as Mock;

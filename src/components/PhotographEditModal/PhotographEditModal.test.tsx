@@ -15,15 +15,15 @@ vi.mock(import('../../context/AuthContext.tsx'), async (importOriginal) => {
             token: 'xxxx',
             username: 'test-user',
             roles: ['ROLE_ADMIN'],
-            setToken: vi.fn()
+            setToken: vi.fn<() => void>()
         })
     };
 });
 
 vi.mock('../../api/client', () => ({
-    getPhotographs: vi.fn(),
-    patchPhotograph: vi.fn(),
-    postGenerateDescription: vi.fn(),
+    getPhotographs: vi.fn<() => void>(),
+    patchPhotograph: vi.fn<() => void>(),
+    postGenerateDescription: vi.fn<() => void>(),
 }));
 
 vi.mock('../../api/config', () => ({
@@ -44,7 +44,7 @@ const mockPhoto = {
     createdAt: "",
     updatedAt: ""
 } satisfies PhotographDTO;
-const mockOnClose = vi.fn();
+const mockOnClose = vi.fn<() => void>();
 
 describe('PhotographEditModal', () => {
 

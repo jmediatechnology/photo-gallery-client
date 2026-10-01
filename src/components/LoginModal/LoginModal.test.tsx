@@ -4,7 +4,7 @@ import {vi} from "vitest";
 import {AuthProvider} from "../../context/AuthContext.tsx";
 import {PhotographProvider} from "../../context/PhotographContext.tsx";
 
-const mockOnClose = vi.fn();
+const mockOnClose = vi.fn<() => void>();
 
 describe('LoginModal', () => {
     test('LoginModal', () => {

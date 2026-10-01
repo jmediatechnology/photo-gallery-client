@@ -10,7 +10,7 @@ describe('useDeleteKeyboardKeyboardKey', () => {
     });
 
     it('calls onDelete when the Delete key on the keyboard is pressed globally', () => {
-        const onDelete = vi.fn();
+        const onDelete = vi.fn<() => void>();
         renderHook(() => useDeleteKeyboardKey(true, onDelete));
 
         fireEvent.keyDown(window, { key: 'Delete' });
@@ -19,7 +19,7 @@ describe('useDeleteKeyboardKeyboardKey', () => {
     });
 
     it('does not call onDelete when the hook is disabled', () => {
-        const onDelete = vi.fn();
+        const onDelete = vi.fn<() => void>();
         renderHook(() => useDeleteKeyboardKey(false, onDelete));
 
         fireEvent.keyDown(window, { key: 'Delete' });
@@ -33,7 +33,7 @@ describe('useDeleteKeyboardKeyboardKey', () => {
         'Enter',
         'a',
     ])('does not call onDelete for the %s key', (key: string) => {
-        const onDelete = vi.fn();
+        const onDelete = vi.fn<() => void>();
         renderHook(() => useDeleteKeyboardKey(true, onDelete));
 
         fireEvent.keyDown(window, { key });
@@ -48,7 +48,7 @@ describe('useDeleteKeyboardKeyboardKey', () => {
         ['a contenteditable element', '<div contenteditable="true"></div>'],
         ['a child of a contenteditable element', '<div contenteditable="true"><span></span></div>'],
     ])('does not call onDelete when the event originates from %s', (_name: string, html: string) => {
-        const onDelete = vi.fn();
+        const onDelete = vi.fn<() => void>();
         renderHook(() => useDeleteKeyboardKey(true, onDelete));
         const target = renderTarget(html);
 
@@ -58,7 +58,7 @@ describe('useDeleteKeyboardKeyboardKey', () => {
     });
 
     it('calls onDelete when the event originates from a contenteditable="false" element', () => {
-        const onDelete = vi.fn();
+        const onDelete = vi.fn<() => void>();
         renderHook(() => useDeleteKeyboardKey(true, onDelete));
         const target = renderTarget('<div contenteditable="false"></div>');
 
@@ -68,7 +68,7 @@ describe('useDeleteKeyboardKeyboardKey', () => {
     });
 
     it('calls onDelete when the event originates from a regular element', () => {
-        const onDelete = vi.fn();
+        const onDelete = vi.fn<() => void>();
         renderHook(() => useDeleteKeyboardKey(true, onDelete));
         const target = renderTarget('<div class="photo-gallery"></div>');
 
@@ -78,7 +78,7 @@ describe('useDeleteKeyboardKeyboardKey', () => {
     });
 
     it('stops listening after unmount', () => {
-        const onDelete = vi.fn();
+        const onDelete = vi.fn<() => void>();
         const { unmount } = renderHook(() => useDeleteKeyboardKey(true, onDelete));
 
         unmount();
@@ -88,7 +88,7 @@ describe('useDeleteKeyboardKeyboardKey', () => {
     });
 
     it('stops listening when enabled flips to false', () => {
-        const onDelete = vi.fn();
+        const onDelete = vi.fn<() => void>();
         const { rerender } = renderHook(
             ({ enabled }: { enabled: boolean }) => useDeleteKeyboardKey(enabled, onDelete),
             { initialProps: { enabled: true } }
@@ -101,8 +101,8 @@ describe('useDeleteKeyboardKeyboardKey', () => {
     });
 
     it('calls the most recent callback after a rerender', () => {
-        const initialOnDelete = vi.fn();
-        const nextOnDelete = vi.fn();
+        const initialOnDelete = vi.fn<() => void>();
+        const nextOnDelete = vi.fn<() => void>();
         const { rerender } = renderHook(
             ({ onDelete }: { onDelete: () => void }) => useDeleteKeyboardKey(true, onDelete),
             { initialProps: { onDelete: initialOnDelete } }
@@ -116,7 +116,7 @@ describe('useDeleteKeyboardKeyboardKey', () => {
     });
 
     it('prevents the default browser behaviour', () => {
-        const onDelete = vi.fn();
+        const onDelete = vi.fn<() => void>();
         renderHook(() => useDeleteKeyboardKey(true, onDelete));
 
         const isNotPrevented = fireEvent.keyDown(window, { key: 'Delete' });

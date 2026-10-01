@@ -16,17 +16,17 @@ vi.mock(import('../../context/AuthContext.tsx'), async (importOriginal) => {
             token: 'xxxx',
             username: 'test-user',
             roles: ['ROLE_ADMIN'],
-            setToken: vi.fn()
+            setToken: vi.fn<() => void>()
         })
     };
 });
 
 vi.mock('../../context/PhotographContext', () => ({
-    usePhotographs: vi.fn(),
+    usePhotographs: vi.fn<() => void>(),
 }));
 
 vi.mock('../../api/client', () => ({
-    postPhotograph: vi.fn(),
+    postPhotograph: vi.fn<() => void>(),
 }));
 
 const mockedUsePhotographs = usePhotographs as Mock;
@@ -41,8 +41,8 @@ const mockPhoto = {
     updatedAt: ""
 } satisfies PhotographDTO;
 
-const mockAddPhotograph = vi.fn();
-const mockOnClose = vi.fn();
+const mockAddPhotograph = vi.fn<() => void>();
+const mockOnClose = vi.fn<() => void>();
 
 describe('PhotographUploadModal', () => {
 
@@ -52,8 +52,8 @@ describe('PhotographUploadModal', () => {
             isLoading: false,
             error: '',
             addPhotograph: mockAddPhotograph,
-            editPhotograph: vi.fn(),
-            removePhotograph: vi.fn(),
+            editPhotograph: vi.fn<() => void>(),
+            removePhotograph: vi.fn<() => void>(),
         });
     });
 

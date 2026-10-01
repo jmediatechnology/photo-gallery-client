@@ -14,7 +14,7 @@ vi.mock(import('../../context/AuthContext.tsx'), async (importOriginal) => {
             token: 'xxxx',
             username: 'test-user',
             roles: ['ROLE_ADMIN'],
-            setToken: vi.fn()
+            setToken: vi.fn<() => void>()
         })
     };
 });
@@ -23,13 +23,13 @@ vi.mock(import('../../context/PhotographContext'), async (importOriginal) => {
     const actual = await importOriginal();
     return {
         ...actual,
-        usePhotographs: vi.fn(),
+        usePhotographs: vi.fn<typeof actual.usePhotographs>(),
     };
 });
 
 vi.mock('../../api/client', () => ({
-    getPhotographs: vi.fn(),
-    deletePhotograph: vi.fn(),
+    getPhotographs: vi.fn<() => void>(),
+    deletePhotograph: vi.fn<() => void>(),
 }));
 
 const mockedUsePhotographs = usePhotographs as Mock;
@@ -45,8 +45,8 @@ const mockPhoto = {
     updatedAt: ""
 } satisfies PhotographDTO;
 
-const mockRemovePhotograph = vi.fn();
-const mockOnClose = vi.fn();
+const mockRemovePhotograph = vi.fn<() => void>();
+const mockOnClose = vi.fn<() => void>();
 
 describe('PhotographDeleteModal', () => {
 
@@ -55,8 +55,8 @@ describe('PhotographDeleteModal', () => {
             photographs: [],
             isLoading: false,
             error: '',
-            addPhotograph: vi.fn(),
-            editPhotograph: vi.fn(),
+            addPhotograph: vi.fn<() => void>(),
+            editPhotograph: vi.fn<() => void>(),
             removePhotograph: mockRemovePhotograph,
         });
         mockedGetPhotographs.mockResolvedValue([mockPhoto]);

@@ -1,12 +1,12 @@
 import { renderHook } from "@testing-library/react";
-import { describe, expect, vi, beforeEach, afterEach } from "vitest";
+import {describe, expect, vi, beforeEach, afterEach, type Mock} from "vitest";
 import { useEscape } from "./useEscape";
 
 describe("useEscape", () => {
-    let onClose: ReturnType<typeof vi.fn>;
+    let onClose: Mock<() => void>;
 
     beforeEach(() => {
-        onClose = vi.fn();
+        onClose = vi.fn<() => void>();
     });
 
     afterEach(() => {
@@ -41,8 +41,8 @@ describe("useEscape", () => {
     });
 
     test("does not call a stale onClose after callback reference changes", () => {
-        const firstOnClose = vi.fn();
-        const secondOnClose = vi.fn();
+        const firstOnClose = vi.fn<() => void>();
+        const secondOnClose = vi.fn<() => void>();
 
         const { rerender } = renderHook(({ onCloseHandler }) => useEscape(onCloseHandler), {
             initialProps: {onCloseHandler: firstOnClose},

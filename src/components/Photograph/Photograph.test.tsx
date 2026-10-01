@@ -20,9 +20,9 @@ const mockPhoto = {
     updatedAt: ""
 } satisfies PhotographDTO;
 
-const mockOnSelect = vi.fn();
-const mockOnSelectEdit = vi.fn();
-const mockOnSelectDelete = vi.fn();
+const mockOnSelect = vi.fn<() => void>();
+const mockOnSelectEdit = vi.fn<() => void>();
+const mockOnSelectDelete = vi.fn<() => void>();
 
 describe('Photograph', () => {
     test('Photograph', () => {

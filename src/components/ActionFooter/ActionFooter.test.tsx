@@ -4,13 +4,13 @@ import { ActionFooter } from './ActionFooter.tsx';
 
 describe('ActionFooter', () => {
     it('renders inside the action-footer container', () => {
-        render(<ActionFooter isPlaying={false} onToggleSlideshow={vi.fn()} />);
+        render(<ActionFooter isPlaying={false} onToggleSlideshow={vi.fn<() => void>()} />);
 
         expect(screen.getByTestId('action-footer')).toBeInTheDocument();
     });
 
     it('shows a "Start slideshow" button when not playing', () => {
-        render(<ActionFooter isPlaying={false} onToggleSlideshow={vi.fn()} />);
+        render(<ActionFooter isPlaying={false} onToggleSlideshow={vi.fn<() => void>()} />);
 
         const button = screen.getByRole('button', { name: 'Start slideshow' });
         expect(button).toBeInTheDocument();
@@ -19,7 +19,7 @@ describe('ActionFooter', () => {
     });
 
     it('shows a "Stop slideshow" button in the active state when playing', () => {
-        render(<ActionFooter isPlaying={true} onToggleSlideshow={vi.fn()} />);
+        render(<ActionFooter isPlaying={true} onToggleSlideshow={vi.fn<() => void>()} />);
 
         const button = screen.getByRole('button', { name: 'Stop slideshow' });
         expect(button).toBeInTheDocument();
@@ -28,7 +28,7 @@ describe('ActionFooter', () => {
     });
 
     it('calls onToggleSlideshow exactly once per click', () => {
-        const onToggleSlideshow = vi.fn();
+        const onToggleSlideshow = vi.fn<() => void>();
         render(<ActionFooter isPlaying={false} onToggleSlideshow={onToggleSlideshow} />);
 
         fireEvent.click(screen.getByRole('button', { name: 'Start slideshow' }));
@@ -37,7 +37,7 @@ describe('ActionFooter', () => {
     });
 
     it('does not flip its own aria label on click', () => {
-        const onToggleSlideshow = vi.fn();
+        const onToggleSlideshow = vi.fn<() => void>();
         const { rerender } = render(<ActionFooter isPlaying={false} onToggleSlideshow={onToggleSlideshow} />);
 
         //  ActionFooter just runs onToggleSlideshow on click.
