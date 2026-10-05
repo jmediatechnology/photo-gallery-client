@@ -41,7 +41,7 @@ const mockPhoto = {
     updatedAt: ""
 } satisfies PhotographDTO;
 
-const mockAddPhotograph = vi.fn<() => void>();
+const mockRefreshPhotographs = vi.fn<() => void>();
 const mockOnClose = vi.fn<() => void>();
 
 describe('PhotographUploadModal', () => {
@@ -51,8 +51,7 @@ describe('PhotographUploadModal', () => {
             photographs: [],
             isLoading: false,
             error: '',
-            addPhotograph: mockAddPhotograph,
-            editPhotograph: vi.fn<() => void>(),
+            refreshPhotographs: mockRefreshPhotographs,
             removePhotograph: vi.fn<() => void>(),
         });
     });
@@ -124,7 +123,7 @@ describe('PhotographUploadModal', () => {
         expect(mockOnClose).not.toHaveBeenCalled();
     });
 
-    test('uploads a single file: resolves the promise, adds the photograph, and closes the modal', async () => {
+    test('uploads a single file: resolves the promise, refreshes the photographs, and closes the modal', async () => {
 
         mockedPostPhotograph.mockResolvedValueOnce(mockPhoto);
 
@@ -156,8 +155,7 @@ describe('PhotographUploadModal', () => {
                     file,
                 })
             );
-            expect(mockAddPhotograph).toHaveBeenCalledTimes(1);
-            expect(mockAddPhotograph).toHaveBeenCalledWith(mockPhoto);
+            expect(mockRefreshPhotographs).toHaveBeenCalledTimes(1);
             expect(mockOnClose).toHaveBeenCalledTimes(1);
         });
     });
@@ -200,13 +198,13 @@ describe('PhotographUploadModal', () => {
         });
 
         expect(mockOnClose).not.toHaveBeenCalled();
+        expect(mockRefreshPhotographs).not.toHaveBeenCalled();
 
         promiseResolver1!(photo1);
 
+        // One refresh for the whole batch, not one per file.
         await waitFor(() => {
-            expect(mockAddPhotograph).toHaveBeenCalledTimes(2);
-            expect(mockAddPhotograph).toHaveBeenCalledWith(photo1);
-            expect(mockAddPhotograph).toHaveBeenCalledWith(photo2);
+            expect(mockRefreshPhotographs).toHaveBeenCalledTimes(1);
         });
 
         // First file keeps the plain title, subsequent files get an index suffix.
@@ -246,7 +244,31 @@ describe('PhotographUploadModal', () => {
             expect(error).toBeInTheDocument();
         });
 
-        expect(mockAddPhotograph).not.toHaveBeenCalled();
+        expect(mockOnClose).not.toHaveBeenCalled();
+    });
+
+    test('refreshes the photographs when one of several uploads fails, since the others may have been stored', async () => {
+        mockedPostPhotograph
+            .mockResolvedValueOnce(mockPhoto)
+            .mockRejectedValueOnce(createAxiosError({ message: 'Upload failed on server'}));
+
+        render(
+            <AuthProvider>
+                <PhotographUploadModal onClose={mockOnClose} />
+            </AuthProvider>
+        );
+
+        await userEvent.type(screen.getByRole('textbox', { name: /title/i }), 'My Trip');
+        await userEvent.upload(screen.getByTestId('muli-file-upload-input-element'), [
+            new File(['one'], 'photo1.jpg', { type: 'image/jpeg' }),
+            new File(['two'], 'photo2.jpg', { type: 'image/jpeg' }),
+        ]);
+        await userEvent.click(screen.getByRole('button', { name: 'Upload' }));
+
+        await waitFor(() => {
+            expect(screen.getByText('Upload failed on server')).toBeInTheDocument();
+            expect(mockRefreshPhotographs).toHaveBeenCalledTimes(1);
+        });
         expect(mockOnClose).not.toHaveBeenCalled();
     });
 });

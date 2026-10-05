@@ -5,6 +5,7 @@ import {useAuth} from "../../context/AuthContext.tsx";
 import {usePhotographSelection} from "../../context/PhotographSelectionContext.tsx";
 import {NavBar} from "./NavBar.tsx";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
+import {DEFAULT_PHOTOGRAPH_SORT} from "../../types/PhotographSort.ts";
 
 vi.mock("../../context/AuthContext.tsx", () => ({
     useAuth: vi.fn<() => void>(),
@@ -40,6 +41,7 @@ const ADMIN = {username: 'admin', roles: ['ROLE_ADMIN'], token: 'test-token'};
 const USER = {username: 'user', roles: ['ROLE_USER'], token: 'test-token'};
 
 const searchPhotographsByTitle = vi.fn<() => void>();
+const sortPhotographs = vi.fn<() => void>();
 
 let unrelatedModals: HTMLElement[] = [];
 
@@ -50,7 +52,11 @@ describe('NavBar', () => {
 
     beforeEach(() => {
         mockedUseAuth.mockReturnValue(ANONYMOUS);
-        mockedUsePhotographs.mockReturnValue({searchPhotographsByTitle});
+        mockedUsePhotographs.mockReturnValue({
+            searchPhotographsByTitle,
+            sort: DEFAULT_PHOTOGRAPH_SORT,
+            sortPhotographs,
+        });
         selectPhotographs([]);
     });
 
@@ -139,11 +145,14 @@ describe('NavBar', () => {
         expect(screen.queryByTestId('selection-delete-modal')).not.toBeInTheDocument();
     });
 
-    test('ignores the Delete key while another modal is open', () => {
+    test.each([
+        ['the show modal', 'modal-overlay'],
+        ['the edit modal', 'modal-overlay-edit'],
+    ])('ignores the Delete key while %s is open', (_: string, overlayClassName: string) => {
         mockedUseAuth.mockReturnValue(ADMIN);
         selectPhotographs([SUNSET]);
         render(<NavBar />);
-        openUnrelatedModal();
+        openUnrelatedModal(overlayClassName);
 
         pressDeleteKey();
 
@@ -157,6 +166,15 @@ describe('NavBar', () => {
         fireEvent.submit(screen.getByRole('search'));
 
         expect(searchPhotographsByTitle).toHaveBeenCalledWith('Sun');
+    });
+
+    test('lets every visitor sort the photographs', () => {
+        render(<NavBar />);
+
+        fireEvent.click(screen.getByRole('button', {name: 'Newest first'}));
+        fireEvent.click(screen.getByRole('menuitemradio', {name: 'Title A–Z'}));
+
+        expect(sortPhotographs).toHaveBeenCalledWith({field: 'title', direction: 'asc'});
     });
 });
 
@@ -172,9 +190,9 @@ const pressDeleteKey = (): void => {
  * Stands in for a modal owned by another component, such as PhotoGallery's
  * PhotographShowModal, whose state NavBar cannot see.
  */
-const openUnrelatedModal = (): void => {
+const openUnrelatedModal = (overlayClassName: string = 'modal-overlay'): void => {
     const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
+    overlay.className = overlayClassName;
     document.body.appendChild(overlay);
     unrelatedModals.push(overlay);
 };

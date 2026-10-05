@@ -14,7 +14,7 @@ interface UploadModalProps {
 export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: UploadModalProps) => {
     useEscape(onClose);
     const { token } = useAuth();
-    const { addPhotograph } = usePhotographs();
+    const { refreshPhotographs } = usePhotographs();
     const [title, setTitle] = React.useState('');
     const [description, setDescription] = React.useState('');
     const [files, setFiles] = React.useState<File[]>([]);
@@ -49,22 +49,24 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
 
         Promise.all(
             files.map(
-                async (file: File, index: number) => {
-                    const response: PhotographDTO = await postPhotograph({
-                        token,
-                        uuid: createUuid(),
-                        title: index === 0 ? title : `${title} ${index}`,
-                        description,
-                        file
-                    });
-                    return addPhotograph(response);
-                }
+                (file: File, index: number): Promise<PhotographDTO> => postPhotograph({
+                    token,
+                    uuid: createUuid(),
+                    title: index === 0 ? title : `${title} ${index}`,
+                    description,
+                    file
+                })
             )
         ).then(() => {
             onClose();
         }).catch((response) => {
             setError(extractErrorMessage(response, 'Failed to upload'));
         }).finally(() => {
+            /*
+             * Refresh on failure too: Promise.all rejects on the first failed
+             * upload while the others may still have been stored.
+             */
+            refreshPhotographs();
             setIsBusy(false);
         });
     };

@@ -17,7 +17,7 @@ interface PhotographEditModalProps {
 export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, onClose}: PhotographEditModalProps) => {
     useEscape(onClose);
     const { token } = useAuth();
-    const {editPhotograph} = usePhotographs();
+    const {refreshPhotographs} = usePhotographs();
     const [uuid] = React.useState(photo.uuid);
     const [title, setTitle] = React.useState(photo.title);
     const [description, setDescription] = React.useState(photo.description || null);
@@ -38,8 +38,8 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
             uuid,
             title,
             description,
-        }).then((response: PhotographDTO) => {
-            editPhotograph(response);
+        }).then(() => {
+            refreshPhotographs();
             onClose();
         }).catch((response) => {
             setError(extractErrorMessage(response, 'Failed to edit photograph'));

@@ -55,8 +55,7 @@ describe('PhotographDeleteModal', () => {
             photographs: [],
             isLoading: false,
             error: '',
-            addPhotograph: vi.fn<() => void>(),
-            editPhotograph: vi.fn<() => void>(),
+            refreshPhotographs: vi.fn<() => void>(),
             removePhotograph: mockRemovePhotograph,
         });
         mockedGetPhotographs.mockResolvedValue([mockPhoto]);

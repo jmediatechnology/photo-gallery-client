@@ -195,6 +195,30 @@ describe('api client', () => {
         expect(photographsRequestConfig().params).toBeUndefined();
     });
 
+    test('getPhotographs sorts on the given field and direction', async () => {
+        mockAnonymousTokenAndPhotographs([SUNSET]);
+
+        await client.getPhotographs({sort: {field: 'title', direction: 'asc'}});
+
+        expect(photographsRequestConfig().params).toEqual({sortField: 'title', sortDirection: 'asc'});
+    });
+
+    test('getPhotographs filters and sorts in the same request', async () => {
+        mockAnonymousTokenAndPhotographs([SUNSET]);
+
+        await client.getPhotographs({title: 'Sun', sort: {field: 'updatedAt', direction: 'desc'}});
+
+        expect(photographsRequestConfig().params).toEqual({title: 'Sun', sortField: 'updatedAt', sortDirection: 'desc'});
+    });
+
+    test('getPhotographs sorts without filtering on a blank title', async () => {
+        mockAnonymousTokenAndPhotographs([SUNSET]);
+
+        await client.getPhotographs({title: '  ', sort: {field: 'createdAt', direction: 'asc'}});
+
+        expect(photographsRequestConfig().params).toEqual({sortField: 'createdAt', sortDirection: 'asc'});
+    });
+
     test('getPhotographs passes the abort signal on to the request', async () => {
         mockAnonymousTokenAndPhotographs([SUNSET]);
         const controller = new AbortController();

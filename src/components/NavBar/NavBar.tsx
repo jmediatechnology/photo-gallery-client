@@ -10,6 +10,8 @@ import {usePhotographSelection} from "../../context/PhotographSelectionContext.t
 import {useDeleteKeyboardKey} from "../../hooks/useDeleteKeyboardKey.tsx";
 import {PhotographTitleSearch} from "../PhotographTitleSearch/PhotographTitleSearch.tsx";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
+import {PhotographSortDropdown} from "../PhotographSortDropdown/PhotographSortDropdown.tsx";
+import {isAnyModalOpen} from "../../dom/isAnyModalOpen.ts";
 
 export const NavBar = () => {
 
@@ -17,7 +19,7 @@ export const NavBar = () => {
     const [isOpenUploadModal, setIsOpenUploadModal] = React.useState<boolean>(false);
     const [isOpenSelectionDeleteModal, setIsOpenSelectionDeleteModal] = React.useState<boolean>(false);
     const { username, roles } = useAuth();
-    const { searchPhotographsByTitle } = usePhotographs();
+    const { searchPhotographsByTitle, sort, sortPhotographs } = usePhotographs();
     const { selectedPhotographs } = usePhotographSelection();
 
     const isAdmin = Boolean(roles?.includes('ROLE_ADMIN'));
@@ -41,6 +43,7 @@ export const NavBar = () => {
                         <Logo />
                     </div>
                     <PhotographTitleSearch onSearch={searchPhotographsByTitle} />
+                    <PhotographSortDropdown sort={sort} onSort={sortPhotographs} />
                     {amountOfSelectedPhotographs > 0 && (
                         <div className="navbar-selection">
                             <span className="navbar-selection-count" data-testid="navbar-selection-count">
@@ -117,14 +120,4 @@ export const NavBar = () => {
             )}
         </>
     );
-};
-
-/*
- * Every modal in the app renders a .modal-overlay element. Checking the DOM at
- * keypress time covers modals owned by other components (PhotoGallery's show,
- * edit and delete modals), whose state NavBar cannot see. A new modal must keep
- * this convention, or the Delete key can open on top of it.
- */
-const isAnyModalOpen = (): boolean => {
-    return document.querySelector('.modal-overlay') !== null;
 };

@@ -1,0 +1,102 @@
+/*
+ * Visually paired with .photograph-title-search: same pill shape, height,
+ * surface colour, border and focus ring, so the two read as one toolbar.
+ */
+.sort-dropdown {
+    position: relative;
+    margin-left: 0.5em;
+}
+
+.sort-dropdown-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.5em 1em;
+    border: 1px solid #444;
+    border-radius: 999px;
+    background-color: #2a2a2a;
+    color: #fff;
+    font: inherit;
+    line-height: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.sort-dropdown-trigger:hover {
+    border-color: #666;
+}
+
+.sort-dropdown-trigger:focus-visible {
+    outline: 2px solid DodgerBlue;
+    outline-offset: 1px;
+}
+
+.sort-dropdown-trigger[aria-expanded="true"] {
+    border-color: DodgerBlue;
+}
+
+.sort-dropdown-icon {
+    color: #999;
+}
+
+.sort-dropdown-chevron {
+    color: #999;
+    font-size: 0.75em;
+    transition: transform 150ms ease;
+}
+
+.sort-dropdown-trigger[aria-expanded="true"] .sort-dropdown-chevron {
+    transform: rotate(180deg);
+}
+
+.sort-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 0.5em);
+    left: 0;
+    z-index: 10;               /* above the gallery, below .modal-overlay */
+    min-width: 100%;
+    margin: 0;
+    padding: 0.25em;
+    list-style: none;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 0.75em;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.sort-dropdown-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75em;
+    width: 100%;
+    padding: 0.5em 0.75em;
+    border: none;
+    border-radius: 0.5em;
+    background: none;
+    color: #fff;
+    font: inherit;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.sort-dropdown-option:hover,
+.sort-dropdown-option:focus-visible {
+    background-color: #3a3a3a;
+    outline: none;
+}
+
+/* Reserves the check mark's width on every row, so labels stay aligned. */
+.sort-dropdown-check {
+    flex: 0 0 1em;
+    color: DodgerBlue;
+    visibility: hidden;
+}
+
+.sort-dropdown-option--selected .sort-dropdown-check {
+    visibility: visible;
+}
+
+.sort-dropdown-option--selected {
+    color: DodgerBlue;
+}

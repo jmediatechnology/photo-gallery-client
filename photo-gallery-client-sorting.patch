@@ -1,0 +1,1161 @@
+diff --git a/src/api/client.test.ts b/src/api/client.test.ts
+index fd01fe5..4ac213f 100644
+--- a/src/api/client.test.ts
++++ b/src/api/client.test.ts
+@@ -195,6 +195,30 @@ describe('api client', () => {
+         expect(photographsRequestConfig().params).toBeUndefined();
+     });
+ 
++    test('getPhotographs sorts on the given field and direction', async () => {
++        mockAnonymousTokenAndPhotographs([SUNSET]);
++
++        await client.getPhotographs({sort: {field: 'title', direction: 'asc'}});
++
++        expect(photographsRequestConfig().params).toEqual({sortField: 'title', sortDirection: 'asc'});
++    });
++
++    test('getPhotographs filters and sorts in the same request', async () => {
++        mockAnonymousTokenAndPhotographs([SUNSET]);
++
++        await client.getPhotographs({title: 'Sun', sort: {field: 'updatedAt', direction: 'desc'}});
++
++        expect(photographsRequestConfig().params).toEqual({title: 'Sun', sortField: 'updatedAt', sortDirection: 'desc'});
++    });
++
++    test('getPhotographs sorts without filtering on a blank title', async () => {
++        mockAnonymousTokenAndPhotographs([SUNSET]);
++
++        await client.getPhotographs({title: '  ', sort: {field: 'createdAt', direction: 'asc'}});
++
++        expect(photographsRequestConfig().params).toEqual({sortField: 'createdAt', sortDirection: 'asc'});
++    });
++
+     test('getPhotographs passes the abort signal on to the request', async () => {
+         mockAnonymousTokenAndPhotographs([SUNSET]);
+         const controller = new AbortController();
+diff --git a/src/api/client.ts b/src/api/client.ts
+index 4202e43..cafdca0 100644
+--- a/src/api/client.ts
++++ b/src/api/client.ts
+@@ -3,6 +3,7 @@ import axios from 'axios';
+ import { api } from './config';
+ import type {PhotographDTO} from "../types";
+ import type {DescriptionDTO} from "../types/DescriptionDTO.ts";
++import type {PhotographSort, PhotographSortField, SortDirection} from "../types/PhotographSort.ts";
+ 
+ let cachedToken: string | null = null;
+ 
+@@ -33,22 +34,24 @@ export const postLogin = async({ username, password }: postLoginPayload): Promis
+ 
+ interface getPhotographsInput {
+     title?: string,
++    sort?: PhotographSort,
+     signal?: AbortSignal,
+ }
+ 
+-export const getPhotographs = async ({ title, signal }: getPhotographsInput = {}): Promise<PhotographDTO[]> => {
+-    const token = await getAnonymousToken();
++interface getPhotographsParams {
++    title?: string,
++    sortField?: PhotographSortField,
++    sortDirection?: SortDirection,
++}
+ 
+-    const params = (title?: string): { title: string } | undefined => {
+-        const trimmedTitle = title?.trim();
+-        return trimmedTitle ? { title: trimmedTitle } : undefined;
+-    };
++export const getPhotographs = async ({ title, sort, signal }: getPhotographsInput = {}): Promise<PhotographDTO[]> => {
++    const token = await getAnonymousToken();
+ 
+     const response = await axios.get<PhotographDTO[]>(
+         api.url("/photographs"),
+         {
+             headers: { Authorization: `Bearer ${token}` },
+-            params: params(title),
++            params: createGetPhotographsParams(title, sort),
+             signal,
+         }
+     );
+@@ -56,6 +59,26 @@ export const getPhotographs = async ({ title, signal }: getPhotographsInput = {}
+     return response.data;
+ };
+ 
++/*
++ * Parameters that are not set are left out of the query string entirely, so
++ * the server applies its own defaults instead of receiving empty values.
++ */
++const createGetPhotographsParams = (title?: string, sort?: PhotographSort): getPhotographsParams | undefined => {
++    const params: getPhotographsParams = {};
++
++    const trimmedTitle = title?.trim();
++    if (trimmedTitle) {
++        params.title = trimmedTitle;
++    }
++
++    if (sort) {
++        params.sortField = sort.field;
++        params.sortDirection = sort.direction;
++    }
++
++    return Object.keys(params).length > 0 ? params : undefined;
++};
++
+ interface postPhotographInput {
+     token: string,
+     uuid: string,
+diff --git a/src/components/NavBar/NavBar.test.tsx b/src/components/NavBar/NavBar.test.tsx
+index e6cf4bd..8d68320 100644
+--- a/src/components/NavBar/NavBar.test.tsx
++++ b/src/components/NavBar/NavBar.test.tsx
+@@ -5,6 +5,7 @@ import {useAuth} from "../../context/AuthContext.tsx";
+ import {usePhotographSelection} from "../../context/PhotographSelectionContext.tsx";
+ import {NavBar} from "./NavBar.tsx";
+ import {usePhotographs} from "../../context/PhotographContext.tsx";
++import {DEFAULT_PHOTOGRAPH_SORT} from "../../types/PhotographSort.ts";
+ 
+ vi.mock("../../context/AuthContext.tsx", () => ({
+     useAuth: vi.fn<() => void>(),
+@@ -40,6 +41,7 @@ const ADMIN = {username: 'admin', roles: ['ROLE_ADMIN'], token: 'test-token'};
+ const USER = {username: 'user', roles: ['ROLE_USER'], token: 'test-token'};
+ 
+ const searchPhotographsByTitle = vi.fn<() => void>();
++const sortPhotographs = vi.fn<() => void>();
+ 
+ let unrelatedModals: HTMLElement[] = [];
+ 
+@@ -50,7 +52,11 @@ describe('NavBar', () => {
+ 
+     beforeEach(() => {
+         mockedUseAuth.mockReturnValue(ANONYMOUS);
+-        mockedUsePhotographs.mockReturnValue({searchPhotographsByTitle});
++        mockedUsePhotographs.mockReturnValue({
++            searchPhotographsByTitle,
++            sort: DEFAULT_PHOTOGRAPH_SORT,
++            sortPhotographs,
++        });
+         selectPhotographs([]);
+     });
+ 
+@@ -139,11 +145,14 @@ describe('NavBar', () => {
+         expect(screen.queryByTestId('selection-delete-modal')).not.toBeInTheDocument();
+     });
+ 
+-    test('ignores the Delete key while another modal is open', () => {
++    test.each([
++        ['the show modal', 'modal-overlay'],
++        ['the edit modal', 'modal-overlay-edit'],
++    ])('ignores the Delete key while %s is open', (_: string, overlayClassName: string) => {
+         mockedUseAuth.mockReturnValue(ADMIN);
+         selectPhotographs([SUNSET]);
+         render(<NavBar />);
+-        openUnrelatedModal();
++        openUnrelatedModal(overlayClassName);
+ 
+         pressDeleteKey();
+ 
+@@ -158,6 +167,15 @@ describe('NavBar', () => {
+ 
+         expect(searchPhotographsByTitle).toHaveBeenCalledWith('Sun');
+     });
++
++    test('lets every visitor sort the photographs', () => {
++        render(<NavBar />);
++
++        fireEvent.click(screen.getByRole('button', {name: 'Newest first'}));
++        fireEvent.click(screen.getByRole('menuitemradio', {name: 'Title A–Z'}));
++
++        expect(sortPhotographs).toHaveBeenCalledWith({field: 'title', direction: 'asc'});
++    });
+ });
+ 
+ const selectPhotographs = (photographs: PhotographDTO[]): void => {
+@@ -172,9 +190,9 @@ const pressDeleteKey = (): void => {
+  * Stands in for a modal owned by another component, such as PhotoGallery's
+  * PhotographShowModal, whose state NavBar cannot see.
+  */
+-const openUnrelatedModal = (): void => {
++const openUnrelatedModal = (overlayClassName: string = 'modal-overlay'): void => {
+     const overlay = document.createElement('div');
+-    overlay.className = 'modal-overlay';
++    overlay.className = overlayClassName;
+     document.body.appendChild(overlay);
+     unrelatedModals.push(overlay);
+ };
+diff --git a/src/components/NavBar/NavBar.tsx b/src/components/NavBar/NavBar.tsx
+index 2e68f43..ad8d1cd 100644
+--- a/src/components/NavBar/NavBar.tsx
++++ b/src/components/NavBar/NavBar.tsx
+@@ -10,6 +10,8 @@ import {usePhotographSelection} from "../../context/PhotographSelectionContext.t
+ import {useDeleteKeyboardKey} from "../../hooks/useDeleteKeyboardKey.tsx";
+ import {PhotographTitleSearch} from "../PhotographTitleSearch/PhotographTitleSearch.tsx";
+ import {usePhotographs} from "../../context/PhotographContext.tsx";
++import {PhotographSortDropdown} from "../PhotographSortDropdown/PhotographSortDropdown.tsx";
++import {isAnyModalOpen} from "../../dom/isAnyModalOpen.ts";
+ 
+ export const NavBar = () => {
+ 
+@@ -17,7 +19,7 @@ export const NavBar = () => {
+     const [isOpenUploadModal, setIsOpenUploadModal] = React.useState<boolean>(false);
+     const [isOpenSelectionDeleteModal, setIsOpenSelectionDeleteModal] = React.useState<boolean>(false);
+     const { username, roles } = useAuth();
+-    const { searchPhotographsByTitle } = usePhotographs();
++    const { searchPhotographsByTitle, sort, sortPhotographs } = usePhotographs();
+     const { selectedPhotographs } = usePhotographSelection();
+ 
+     const isAdmin = Boolean(roles?.includes('ROLE_ADMIN'));
+@@ -41,6 +43,7 @@ export const NavBar = () => {
+                         <Logo />
+                     </div>
+                     <PhotographTitleSearch onSearch={searchPhotographsByTitle} />
++                    <PhotographSortDropdown sort={sort} onSort={sortPhotographs} />
+                     {amountOfSelectedPhotographs > 0 && (
+                         <div className="navbar-selection">
+                             <span className="navbar-selection-count" data-testid="navbar-selection-count">
+@@ -118,13 +121,3 @@ export const NavBar = () => {
+         </>
+     );
+ };
+-
+-/*
+- * Every modal in the app renders a .modal-overlay element. Checking the DOM at
+- * keypress time covers modals owned by other components (PhotoGallery's show,
+- * edit and delete modals), whose state NavBar cannot see. A new modal must keep
+- * this convention, or the Delete key can open on top of it.
+- */
+-const isAnyModalOpen = (): boolean => {
+-    return document.querySelector('.modal-overlay') !== null;
+-};
+diff --git a/src/components/PhotographDeleteModal/PhotographDeleteModal.test.tsx b/src/components/PhotographDeleteModal/PhotographDeleteModal.test.tsx
+index b6d920e..7e89e79 100644
+--- a/src/components/PhotographDeleteModal/PhotographDeleteModal.test.tsx
++++ b/src/components/PhotographDeleteModal/PhotographDeleteModal.test.tsx
+@@ -55,8 +55,7 @@ describe('PhotographDeleteModal', () => {
+             photographs: [],
+             isLoading: false,
+             error: '',
+-            addPhotograph: vi.fn<() => void>(),
+-            editPhotograph: vi.fn<() => void>(),
++            refreshPhotographs: vi.fn<() => void>(),
+             removePhotograph: mockRemovePhotograph,
+         });
+         mockedGetPhotographs.mockResolvedValue([mockPhoto]);
+diff --git a/src/components/PhotographEditModal/PhotographEditModal.tsx b/src/components/PhotographEditModal/PhotographEditModal.tsx
+index 063d802..8245e5b 100644
+--- a/src/components/PhotographEditModal/PhotographEditModal.tsx
++++ b/src/components/PhotographEditModal/PhotographEditModal.tsx
+@@ -17,7 +17,7 @@ interface PhotographEditModalProps {
+ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, onClose}: PhotographEditModalProps) => {
+     useEscape(onClose);
+     const { token } = useAuth();
+-    const {editPhotograph} = usePhotographs();
++    const {refreshPhotographs} = usePhotographs();
+     const [uuid] = React.useState(photo.uuid);
+     const [title, setTitle] = React.useState(photo.title);
+     const [description, setDescription] = React.useState(photo.description || null);
+@@ -38,8 +38,8 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo,
+             uuid,
+             title,
+             description,
+-        }).then((response: PhotographDTO) => {
+-            editPhotograph(response);
++        }).then(() => {
++            refreshPhotographs();
+             onClose();
+         }).catch((response) => {
+             setError(extractErrorMessage(response, 'Failed to edit photograph'));
+diff --git a/src/components/PhotographSortDropdown/PhotographSortDropdown.css b/src/components/PhotographSortDropdown/PhotographSortDropdown.css
+new file mode 100644
+index 0000000..fdfaac1
+--- /dev/null
++++ b/src/components/PhotographSortDropdown/PhotographSortDropdown.css
+@@ -0,0 +1,102 @@
++/*
++ * Visually paired with .photograph-title-search: same pill shape, height,
++ * surface colour, border and focus ring, so the two read as one toolbar.
++ */
++.sort-dropdown {
++    position: relative;
++    margin-left: 0.5em;
++}
++
++.sort-dropdown-trigger {
++    display: inline-flex;
++    align-items: center;
++    gap: 0.5em;
++    padding: 0.5em 1em;
++    border: 1px solid #444;
++    border-radius: 999px;
++    background-color: #2a2a2a;
++    color: #fff;
++    font: inherit;
++    line-height: inherit;
++    white-space: nowrap;
++    cursor: pointer;
++}
++
++.sort-dropdown-trigger:hover {
++    border-color: #666;
++}
++
++.sort-dropdown-trigger:focus-visible {
++    outline: 2px solid DodgerBlue;
++    outline-offset: 1px;
++}
++
++.sort-dropdown-trigger[aria-expanded="true"] {
++    border-color: DodgerBlue;
++}
++
++.sort-dropdown-icon {
++    color: #999;
++}
++
++.sort-dropdown-chevron {
++    color: #999;
++    font-size: 0.75em;
++    transition: transform 150ms ease;
++}
++
++.sort-dropdown-trigger[aria-expanded="true"] .sort-dropdown-chevron {
++    transform: rotate(180deg);
++}
++
++.sort-dropdown-menu {
++    position: absolute;
++    top: calc(100% + 0.5em);
++    left: 0;
++    z-index: 10;               /* above the gallery, below .modal-overlay */
++    min-width: 100%;
++    margin: 0;
++    padding: 0.25em;
++    list-style: none;
++    background-color: #2a2a2a;
++    border: 1px solid #444;
++    border-radius: 0.75em;
++    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
++}
++
++.sort-dropdown-option {
++    display: flex;
++    align-items: center;
++    gap: 0.75em;
++    width: 100%;
++    padding: 0.5em 0.75em;
++    border: none;
++    border-radius: 0.5em;
++    background: none;
++    color: #fff;
++    font: inherit;
++    text-align: left;
++    white-space: nowrap;
++    cursor: pointer;
++}
++
++.sort-dropdown-option:hover,
++.sort-dropdown-option:focus-visible {
++    background-color: #3a3a3a;
++    outline: none;
++}
++
++/* Reserves the check mark's width on every row, so labels stay aligned. */
++.sort-dropdown-check {
++    flex: 0 0 1em;
++    color: DodgerBlue;
++    visibility: hidden;
++}
++
++.sort-dropdown-option--selected .sort-dropdown-check {
++    visibility: visible;
++}
++
++.sort-dropdown-option--selected {
++    color: DodgerBlue;
++}
+diff --git a/src/components/PhotographSortDropdown/PhotographSortDropdown.test.tsx b/src/components/PhotographSortDropdown/PhotographSortDropdown.test.tsx
+new file mode 100644
+index 0000000..f06a171
+--- /dev/null
++++ b/src/components/PhotographSortDropdown/PhotographSortDropdown.test.tsx
+@@ -0,0 +1,143 @@
++import {fireEvent, render, screen} from "@testing-library/react";
++import {afterEach, describe, expect, test, vi} from "vitest";
++import {PhotographSortDropdown} from "./PhotographSortDropdown.tsx";
++import {DEFAULT_PHOTOGRAPH_SORT, type PhotographSort} from "../../types/PhotographSort.ts";
++
++let openModals: HTMLElement[] = [];
++
++describe('PhotographSortDropdown', () => {
++
++    afterEach(() => {
++        openModals.forEach((overlay: HTMLElement) => overlay.remove());
++        openModals = [];
++        vi.clearAllMocks();
++    });
++
++    test('shows the label of the current sort on the button', () => {
++        renderDropdown({field: 'title', direction: 'asc'});
++
++        expect(trigger()).toHaveTextContent('Title A–Z');
++        expect(trigger()).toHaveAttribute('aria-expanded', 'false');
++    });
++
++    test('opens a menu with every sort option, the current one checked', () => {
++        renderDropdown();
++
++        fireEvent.click(trigger());
++
++        const options = screen.getAllByRole('menuitemradio');
++        expect(options.map((option) => option.textContent)).toEqual([
++            'Newest first',
++            'Oldest first',
++            'Recently updated',
++            'Least recently updated',
++            'Title A–Z',
++            'Title Z–A',
++        ]);
++        expect(screen.getByRole('menuitemradio', {name: 'Newest first'})).toHaveAttribute('aria-checked', 'true');
++        expect(screen.getByRole('menuitemradio', {name: 'Oldest first'})).toHaveAttribute('aria-checked', 'false');
++    });
++
++    test('focuses the checked option when it opens', () => {
++        renderDropdown({field: 'updatedAt', direction: 'desc'});
++
++        fireEvent.click(trigger());
++
++        expect(screen.getByRole('menuitemradio', {name: 'Recently updated'})).toHaveFocus();
++    });
++
++    test('reports the chosen sort and closes', () => {
++        const {onSort} = renderDropdown();
++        fireEvent.click(trigger());
++
++        fireEvent.click(screen.getByRole('menuitemradio', {name: 'Title Z–A'}));
++
++        expect(onSort).toHaveBeenCalledExactlyOnceWith({field: 'title', direction: 'desc'});
++        expect(screen.queryByRole('menu')).not.toBeInTheDocument();
++        expect(trigger()).toHaveFocus();
++    });
++
++    test('closes when the button is clicked again', () => {
++        renderDropdown();
++        fireEvent.click(trigger());
++
++        fireEvent.click(trigger());
++
++        expect(screen.queryByRole('menu')).not.toBeInTheDocument();
++    });
++
++    test('closes on a mouse down outside the dropdown', () => {
++        const {onSort} = renderDropdown();
++        fireEvent.click(trigger());
++
++        fireEvent.mouseDown(document.body);
++
++        expect(screen.queryByRole('menu')).not.toBeInTheDocument();
++        expect(onSort).not.toHaveBeenCalled();
++    });
++
++    test('stays open on a mouse down inside the menu', () => {
++        renderDropdown();
++        fireEvent.click(trigger());
++
++        fireEvent.mouseDown(screen.getByRole('menuitemradio', {name: 'Oldest first'}));
++
++        expect(screen.getByRole('menu')).toBeInTheDocument();
++    });
++
++    test('closes on Escape and returns focus to the button', () => {
++        renderDropdown();
++        fireEvent.click(trigger());
++
++        fireEvent.keyDown(window, {key: 'Escape'});
++
++        expect(screen.queryByRole('menu')).not.toBeInTheDocument();
++        expect(trigger()).toHaveFocus();
++    });
++
++    test('moves focus with the arrow keys and wraps around', () => {
++        renderDropdown();
++        fireEvent.click(trigger());
++        const menu = screen.getByRole('menu');
++
++        fireEvent.keyDown(menu, {key: 'ArrowDown'});
++        expect(screen.getByRole('menuitemradio', {name: 'Oldest first'})).toHaveFocus();
++
++        fireEvent.keyDown(menu, {key: 'ArrowUp'});
++        fireEvent.keyDown(menu, {key: 'ArrowUp'});
++        expect(screen.getByRole('menuitemradio', {name: 'Title Z–A'})).toHaveFocus();
++    });
++
++    test.each([
++        ['the show modal', 'modal-overlay'],
++        ['the edit modal', 'modal-overlay-edit'],
++    ])('does not open while %s is open', (_: string, overlayClassName: string) => {
++        renderDropdown();
++        openModal(overlayClassName);
++
++        fireEvent.click(trigger());
++
++        expect(screen.queryByRole('menu')).not.toBeInTheDocument();
++    });
++});
++
++const renderDropdown = (sort: PhotographSort = DEFAULT_PHOTOGRAPH_SORT) => {
++    const onSort = vi.fn();
++    render(<PhotographSortDropdown sort={sort} onSort={onSort} />);
++    return {onSort};
++};
++
++/*
++ * The options carry role="menuitemradio", so the trigger is the only element
++ * with the button role, open or closed.
++ */
++const trigger = (): HTMLElement => {
++    return screen.getByRole('button');
++};
++
++const openModal = (className: string): void => {
++    const overlay = document.createElement('div');
++    overlay.className = className;
++    document.body.appendChild(overlay);
++    openModals.push(overlay);
++};
+diff --git a/src/components/PhotographSortDropdown/PhotographSortDropdown.tsx b/src/components/PhotographSortDropdown/PhotographSortDropdown.tsx
+new file mode 100644
+index 0000000..7a2e87f
+--- /dev/null
++++ b/src/components/PhotographSortDropdown/PhotographSortDropdown.tsx
+@@ -0,0 +1,146 @@
++import './PhotographSortDropdown.css';
++import * as React from "react";
++import {FaCheck, FaChevronDown, FaSort} from "react-icons/fa";
++import {isSamePhotographSort, type PhotographSort} from "../../types/PhotographSort.ts";
++import {isAnyModalOpen} from "../../dom/isAnyModalOpen.ts";
++import {PHOTOGRAPH_SORT_OPTIONS, type PhotographSortOption} from "./photographSortOptions.ts";
++
++interface PhotographSortDropdownProps {
++    sort: PhotographSort,
++    onSort: (sort: PhotographSort) => void,
++}
++
++export const PhotographSortDropdown = ({sort, onSort}: PhotographSortDropdownProps) => {
++    const [isOpen, setIsOpen] = React.useState<boolean>(false);
++    const containerRef = React.useRef<HTMLDivElement>(null);
++    const triggerRef = React.useRef<HTMLButtonElement>(null);
++    const optionRefs = React.useRef<Array<HTMLButtonElement | null>>([]);
++
++    const selectedIndex = PHOTOGRAPH_SORT_OPTIONS.findIndex(
++        (option: PhotographSortOption) => isSamePhotographSort(option.sort, sort)
++    );
++    const selectedLabel = PHOTOGRAPH_SORT_OPTIONS[selectedIndex]?.label ?? 'Sort';
++
++    const close = React.useCallback((): void => setIsOpen(false), []);
++
++    const closeAndFocusTrigger = React.useCallback((): void => {
++        setIsOpen(false);
++        triggerRef.current?.focus();
++    }, []);
++
++    useCloseOnOutsideMouseDown(isOpen, containerRef, close);
++    useCloseOnEscape(isOpen, closeAndFocusTrigger);
++
++    React.useEffect(() => {
++        if (isOpen) {
++            optionRefs.current[Math.max(selectedIndex, 0)]?.focus();
++        }
++        // Only on opening; moving focus on every sort change would steal it.
++        // eslint-disable-next-line react-hooks/exhaustive-deps
++    }, [isOpen]);
++
++    const toggle = (): void => {
++        if (!isOpen && isAnyModalOpen()) {
++            return;
++        }
++
++        setIsOpen((previous: boolean) => !previous);
++    };
++
++    const select = (option: PhotographSortOption): void => {
++        onSort(option.sort);
++        closeAndFocusTrigger();
++    };
++
++    const moveFocus = (event: React.KeyboardEvent<HTMLUListElement>): void => {
++        if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
++            return;
++        }
++
++        event.preventDefault();
++        const amountOfOptions = PHOTOGRAPH_SORT_OPTIONS.length;
++        const focusedIndex = optionRefs.current.findIndex(
++            (element: HTMLButtonElement | null) => element === document.activeElement
++        );
++        const step = event.key === 'ArrowDown' ? 1 : -1;
++        const nextIndex = (focusedIndex + step + amountOfOptions) % amountOfOptions;
++        optionRefs.current[nextIndex]?.focus();
++    };
++
++    return (
++        <div className="sort-dropdown" ref={containerRef}>
++            <button
++                ref={triggerRef}
++                type="button"
++                className="sort-dropdown-trigger"
++                aria-haspopup="menu"
++                aria-expanded={isOpen}
++                onClick={toggle}
++            >
++                <FaSort className="sort-dropdown-icon" aria-hidden="true" />
++                {selectedLabel}
++                <FaChevronDown className="sort-dropdown-chevron" aria-hidden="true" />
++            </button>
++            {isOpen && (
++                <ul className="sort-dropdown-menu" role="menu" aria-label="Sort photographs" onKeyDown={moveFocus}>
++                    {PHOTOGRAPH_SORT_OPTIONS.map((option: PhotographSortOption, index: number) => {
++                        const isSelected = index === selectedIndex;
++                        return (
++                            <li key={option.label} role="none">
++                                <button
++                                    ref={(element) => { optionRefs.current[index] = element; }}
++                                    type="button"
++                                    role="menuitemradio"
++                                    aria-checked={isSelected}
++                                    className={`sort-dropdown-option${isSelected ? ' sort-dropdown-option--selected' : ''}`}
++                                    onClick={() => select(option)}
++                                >
++                                    <FaCheck className="sort-dropdown-check" aria-hidden="true" />
++                                    {option.label}
++                                </button>
++                            </li>
++                        );
++                    })}
++                </ul>
++            )}
++        </div>
++    );
++};
++
++const useCloseOnOutsideMouseDown = (
++    isOpen: boolean,
++    containerRef: React.RefObject<HTMLElement | null>,
++    onClose: () => void,
++): void => {
++    React.useEffect(() => {
++        if (!isOpen) {
++            return;
++        }
++
++        const handleMouseDown = (event: MouseEvent): void => {
++            if (!containerRef.current?.contains(event.target as Node)) {
++                onClose();
++            }
++        };
++
++        document.addEventListener('mousedown', handleMouseDown);
++        return () => document.removeEventListener('mousedown', handleMouseDown);
++    }, [isOpen, containerRef, onClose]);
++};
++
++const useCloseOnEscape = (isOpen: boolean, onClose: () => void): void => {
++    React.useEffect(() => {
++        if (!isOpen) {
++            return;
++        }
++
++        const handleKeyDown = (event: KeyboardEvent): void => {
++            if (event.key === 'Escape') {
++                onClose();
++            }
++        };
++
++        window.addEventListener('keydown', handleKeyDown);
++        return () => window.removeEventListener('keydown', handleKeyDown);
++    }, [isOpen, onClose]);
++};
+diff --git a/src/components/PhotographSortDropdown/photographSortOptions.ts b/src/components/PhotographSortDropdown/photographSortOptions.ts
+new file mode 100644
+index 0000000..c5fc1b6
+--- /dev/null
++++ b/src/components/PhotographSortDropdown/photographSortOptions.ts
+@@ -0,0 +1,15 @@
++import type {PhotographSort} from "../../types/PhotographSort.ts";
++
++export interface PhotographSortOption {
++    label: string,
++    sort: PhotographSort,
++}
++
++export const PHOTOGRAPH_SORT_OPTIONS: PhotographSortOption[] = [
++    {label: 'Newest first', sort: {field: 'createdAt', direction: 'desc'}},
++    {label: 'Oldest first', sort: {field: 'createdAt', direction: 'asc'}},
++    {label: 'Recently updated', sort: {field: 'updatedAt', direction: 'desc'}},
++    {label: 'Least recently updated', sort: {field: 'updatedAt', direction: 'asc'}},
++    {label: 'Title A–Z', sort: {field: 'title', direction: 'asc'}},
++    {label: 'Title Z–A', sort: {field: 'title', direction: 'desc'}},
++];
+diff --git a/src/components/PhotographUploadModal/PhotographUploadModal.test.tsx b/src/components/PhotographUploadModal/PhotographUploadModal.test.tsx
+index ba0ebc8..1f38819 100644
+--- a/src/components/PhotographUploadModal/PhotographUploadModal.test.tsx
++++ b/src/components/PhotographUploadModal/PhotographUploadModal.test.tsx
+@@ -41,7 +41,7 @@ const mockPhoto = {
+     updatedAt: ""
+ } satisfies PhotographDTO;
+ 
+-const mockAddPhotograph = vi.fn<() => void>();
++const mockRefreshPhotographs = vi.fn<() => void>();
+ const mockOnClose = vi.fn<() => void>();
+ 
+ describe('PhotographUploadModal', () => {
+@@ -51,8 +51,7 @@ describe('PhotographUploadModal', () => {
+             photographs: [],
+             isLoading: false,
+             error: '',
+-            addPhotograph: mockAddPhotograph,
+-            editPhotograph: vi.fn<() => void>(),
++            refreshPhotographs: mockRefreshPhotographs,
+             removePhotograph: vi.fn<() => void>(),
+         });
+     });
+@@ -124,7 +123,7 @@ describe('PhotographUploadModal', () => {
+         expect(mockOnClose).not.toHaveBeenCalled();
+     });
+ 
+-    test('uploads a single file: resolves the promise, adds the photograph, and closes the modal', async () => {
++    test('uploads a single file: resolves the promise, refreshes the photographs, and closes the modal', async () => {
+ 
+         mockedPostPhotograph.mockResolvedValueOnce(mockPhoto);
+ 
+@@ -156,8 +155,7 @@ describe('PhotographUploadModal', () => {
+                     file,
+                 })
+             );
+-            expect(mockAddPhotograph).toHaveBeenCalledTimes(1);
+-            expect(mockAddPhotograph).toHaveBeenCalledWith(mockPhoto);
++            expect(mockRefreshPhotographs).toHaveBeenCalledTimes(1);
+             expect(mockOnClose).toHaveBeenCalledTimes(1);
+         });
+     });
+@@ -200,13 +198,13 @@ describe('PhotographUploadModal', () => {
+         });
+ 
+         expect(mockOnClose).not.toHaveBeenCalled();
++        expect(mockRefreshPhotographs).not.toHaveBeenCalled();
+ 
+         promiseResolver1!(photo1);
+ 
++        // One refresh for the whole batch, not one per file.
+         await waitFor(() => {
+-            expect(mockAddPhotograph).toHaveBeenCalledTimes(2);
+-            expect(mockAddPhotograph).toHaveBeenCalledWith(photo1);
+-            expect(mockAddPhotograph).toHaveBeenCalledWith(photo2);
++            expect(mockRefreshPhotographs).toHaveBeenCalledTimes(1);
+         });
+ 
+         // First file keeps the plain title, subsequent files get an index suffix.
+@@ -246,7 +244,31 @@ describe('PhotographUploadModal', () => {
+             expect(error).toBeInTheDocument();
+         });
+ 
+-        expect(mockAddPhotograph).not.toHaveBeenCalled();
++        expect(mockOnClose).not.toHaveBeenCalled();
++    });
++
++    test('refreshes the photographs when one of several uploads fails, since the others may have been stored', async () => {
++        mockedPostPhotograph
++            .mockResolvedValueOnce(mockPhoto)
++            .mockRejectedValueOnce(createAxiosError({ message: 'Upload failed on server'}));
++
++        render(
++            <AuthProvider>
++                <PhotographUploadModal onClose={mockOnClose} />
++            </AuthProvider>
++        );
++
++        await userEvent.type(screen.getByRole('textbox', { name: /title/i }), 'My Trip');
++        await userEvent.upload(screen.getByTestId('muli-file-upload-input-element'), [
++            new File(['one'], 'photo1.jpg', { type: 'image/jpeg' }),
++            new File(['two'], 'photo2.jpg', { type: 'image/jpeg' }),
++        ]);
++        await userEvent.click(screen.getByRole('button', { name: 'Upload' }));
++
++        await waitFor(() => {
++            expect(screen.getByText('Upload failed on server')).toBeInTheDocument();
++            expect(mockRefreshPhotographs).toHaveBeenCalledTimes(1);
++        });
+         expect(mockOnClose).not.toHaveBeenCalled();
+     });
+ });
+diff --git a/src/components/PhotographUploadModal/PhotographUploadModal.tsx b/src/components/PhotographUploadModal/PhotographUploadModal.tsx
+index 84f93f0..a116837 100644
+--- a/src/components/PhotographUploadModal/PhotographUploadModal.tsx
++++ b/src/components/PhotographUploadModal/PhotographUploadModal.tsx
+@@ -14,7 +14,7 @@ interface UploadModalProps {
+ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: UploadModalProps) => {
+     useEscape(onClose);
+     const { token } = useAuth();
+-    const { addPhotograph } = usePhotographs();
++    const { refreshPhotographs } = usePhotographs();
+     const [title, setTitle] = React.useState('');
+     const [description, setDescription] = React.useState('');
+     const [files, setFiles] = React.useState<File[]>([]);
+@@ -49,22 +49,24 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
+ 
+         Promise.all(
+             files.map(
+-                async (file: File, index: number) => {
+-                    const response: PhotographDTO = await postPhotograph({
+-                        token,
+-                        uuid: createUuid(),
+-                        title: index === 0 ? title : `${title} ${index}`,
+-                        description,
+-                        file
+-                    });
+-                    return addPhotograph(response);
+-                }
++                (file: File, index: number): Promise<PhotographDTO> => postPhotograph({
++                    token,
++                    uuid: createUuid(),
++                    title: index === 0 ? title : `${title} ${index}`,
++                    description,
++                    file
++                })
+             )
+         ).then(() => {
+             onClose();
+         }).catch((response) => {
+             setError(extractErrorMessage(response, 'Failed to upload'));
+         }).finally(() => {
++            /*
++             * Refresh on failure too: Promise.all rejects on the first failed
++             * upload while the others may still have been stored.
++             */
++            refreshPhotographs();
+             setIsBusy(false);
+         });
+     };
+diff --git a/src/context/PhotographContext.test.tsx b/src/context/PhotographContext.test.tsx
+index 37206fb..810bbcf 100644
+--- a/src/context/PhotographContext.test.tsx
++++ b/src/context/PhotographContext.test.tsx
+@@ -5,6 +5,7 @@ import type {PhotographDTO} from "../types";
+ import {getPhotographs} from "../api/client.ts";
+ import {CircularArray} from "../data-structures/CircularArray.ts";
+ import {PhotographProvider, usePhotographs} from "./PhotographContext.tsx";
++import {DEFAULT_PHOTOGRAPH_SORT, type PhotographSort} from "../types/PhotographSort.ts";
+ 
+ vi.mock("../api/client.ts", () => ({
+     getPhotographs: vi.fn<() => void>(),
+@@ -17,6 +18,8 @@ const NIGHT = {uuid: '2', title: 'Night', description: '', filePath: '/night.jpg
+ const MORNING = {uuid: '3', title: 'Morning', description: '', filePath: '/morning.jpg'} as PhotographDTO;
+ const DUSK = {uuid: '4', title: 'Dusk', description: '', filePath: '/dusk.jpg'} as PhotographDTO;
+ 
++const TITLE_ASCENDING: PhotographSort = {field: 'title', direction: 'asc'};
++
+ describe('PhotographContext', () => {
+ 
+     afterEach(() => {
+@@ -54,31 +57,6 @@ describe('PhotographContext', () => {
+         expect(result.current.photographs).toHaveLength(0);
+     });
+ 
+-    test('addPhotograph puts the new photograph first', async () => {
+-        const {result} = await renderLoadedPhotographs([SUNSET, NIGHT]);
+-
+-        act(() => result.current.addPhotograph(MORNING));
+-
+-        expect(Array.from(result.current.photographs)).toEqual([MORNING, SUNSET, NIGHT]);
+-    });
+-
+-    test('editPhotograph replaces the photograph with the same uuid and keeps the order', async () => {
+-        const {result} = await renderLoadedPhotographs([SUNSET, NIGHT, MORNING]);
+-        const editedNight = {...NIGHT, title: 'Starry night'};
+-
+-        act(() => result.current.editPhotograph(editedNight));
+-
+-        expect(Array.from(result.current.photographs)).toEqual([SUNSET, editedNight, MORNING]);
+-    });
+-
+-    test('editPhotograph leaves the photographs untouched for an unknown uuid', async () => {
+-        const {result} = await renderLoadedPhotographs([SUNSET, NIGHT]);
+-
+-        act(() => result.current.editPhotograph(DUSK));
+-
+-        expect(Array.from(result.current.photographs)).toEqual([SUNSET, NIGHT]);
+-    });
+-
+     test('removePhotograph removes the photograph with the given uuid', async () => {
+         const {result} = await renderLoadedPhotographs([SUNSET, NIGHT, MORNING]);
+ 
+@@ -88,23 +66,10 @@ describe('PhotographContext', () => {
+     });
+ 
+     /*
+-     * The next two tests guard against a regression: when these functions
+-     * built the new array from the photographs captured at render time,
+-     * updates made before the next render overwrote each other and only
+-     * the last one survived.
++     * Guards against a regression: when removePhotograph built the new array
++     * from the photographs captured at render time, deletions made before the
++     * next render overwrote each other and only the last one survived.
+      */
+-    test('keeps every photograph when several uploads finish at the same time', async () => {
+-        const {result} = await renderLoadedPhotographs([SUNSET]);
+-
+-        act(() => {
+-            result.current.addPhotograph(NIGHT);
+-            result.current.addPhotograph(MORNING);
+-            result.current.addPhotograph(DUSK);
+-        });
+-
+-        expect(Array.from(result.current.photographs)).toEqual([DUSK, MORNING, NIGHT, SUNSET]);
+-    });
+-
+     test('removes every photograph when several deletions finish at the same time', async () => {
+         const {result} = await renderLoadedPhotographs([SUNSET, NIGHT, MORNING, DUSK]);
+ 
+@@ -128,7 +93,7 @@ describe('PhotographContext', () => {
+     test('loads all photographs initially without a title filter', async () => {
+         await renderLoadedPhotographs([SUNSET, NIGHT]);
+ 
+-        expect(mockedGetPhotographs).toHaveBeenCalledWith({title: '', signal: expect.any(AbortSignal)});
++        expect(mockedGetPhotographs).toHaveBeenCalledWith({title: '', sort: DEFAULT_PHOTOGRAPH_SORT, signal: expect.any(AbortSignal)});
+     });
+ 
+     test('searchPhotographsByTitle loads the matching photographs', async () => {
+@@ -138,7 +103,7 @@ describe('PhotographContext', () => {
+         act(() => result.current.searchPhotographsByTitle('Sun'));
+ 
+         await waitFor(() => expect(Array.from(result.current.photographs)).toEqual([SUNSET]));
+-        expect(mockedGetPhotographs).toHaveBeenLastCalledWith({title: 'Sun', signal: expect.any(AbortSignal)});
++        expect(mockedGetPhotographs).toHaveBeenLastCalledWith({title: 'Sun', sort: DEFAULT_PHOTOGRAPH_SORT, signal: expect.any(AbortSignal)});
+     });
+ 
+     test('keeps showing the photographs while a search is loading', async () => {
+@@ -205,6 +170,86 @@ describe('PhotographContext', () => {
+         await waitFor(() => expect(result.current.error).toBe(''));
+         expect(Array.from(result.current.photographs)).toEqual([SUNSET]);
+     });
++    test('sorts by newest first by default', async () => {
++        const {result} = await renderLoadedPhotographs([SUNSET, NIGHT]);
++
++        expect(result.current.sort).toEqual({field: 'createdAt', direction: 'desc'});
++    });
++
++    test('sortPhotographs loads the photographs in the new order', async () => {
++        const {result} = await renderLoadedPhotographs([SUNSET, NIGHT]);
++        mockedGetPhotographs.mockResolvedValue([NIGHT, SUNSET]);
++
++        act(() => result.current.sortPhotographs(TITLE_ASCENDING));
++
++        await waitFor(() => expect(Array.from(result.current.photographs)).toEqual([NIGHT, SUNSET]));
++        expect(result.current.sort).toEqual(TITLE_ASCENDING);
++        expect(mockedGetPhotographs).toHaveBeenLastCalledWith({title: '', sort: TITLE_ASCENDING, signal: expect.any(AbortSignal)});
++    });
++
++    test('a title search keeps the chosen sort', async () => {
++        const {result} = await renderLoadedPhotographs([SUNSET, NIGHT]);
++        act(() => result.current.sortPhotographs(TITLE_ASCENDING));
++
++        act(() => result.current.searchPhotographsByTitle('Sun'));
++
++        await waitFor(() => expect(mockedGetPhotographs).toHaveBeenLastCalledWith(
++            {title: 'Sun', sort: TITLE_ASCENDING, signal: expect.any(AbortSignal)}
++        ));
++    });
++
++    test('changing the sort keeps the title search', async () => {
++        const {result} = await renderLoadedPhotographs([SUNSET, NIGHT]);
++        act(() => result.current.searchPhotographsByTitle('Sun'));
++
++        act(() => result.current.sortPhotographs(TITLE_ASCENDING));
++
++        await waitFor(() => expect(mockedGetPhotographs).toHaveBeenLastCalledWith(
++            {title: 'Sun', sort: TITLE_ASCENDING, signal: expect.any(AbortSignal)}
++        ));
++    });
++
++    test('does not load again when the same sort is chosen', async () => {
++        const {result} = await renderLoadedPhotographs([SUNSET, NIGHT]);
++
++        act(() => result.current.sortPhotographs({field: 'createdAt', direction: 'desc'}));
++
++        expect(mockedGetPhotographs).toHaveBeenCalledTimes(1);
++    });
++
++    test('keeps showing the photographs while a new sort is loading', async () => {
++        const {result} = await renderLoadedPhotographs([SUNSET, NIGHT]);
++        mockedGetPhotographs.mockReturnValue(new Promise(() => undefined));
++
++        act(() => result.current.sortPhotographs(TITLE_ASCENDING));
++
++        expect(result.current.isLoading).toBe(false);
++        expect(Array.from(result.current.photographs)).toEqual([SUNSET, NIGHT]);
++    });
++
++    test('refreshPhotographs loads again with the current title search and sort', async () => {
++        const {result} = await renderLoadedPhotographs([SUNSET, NIGHT]);
++        act(() => result.current.searchPhotographsByTitle('Sun'));
++        act(() => result.current.sortPhotographs(TITLE_ASCENDING));
++        await waitFor(() => expect(mockedGetPhotographs).toHaveBeenCalledTimes(3));
++        mockedGetPhotographs.mockResolvedValue([MORNING, SUNSET]);
++
++        act(() => result.current.refreshPhotographs());
++
++        await waitFor(() => expect(Array.from(result.current.photographs)).toEqual([MORNING, SUNSET]));
++        expect(mockedGetPhotographs).toHaveBeenCalledTimes(4);
++        expect(mockedGetPhotographs).toHaveBeenLastCalledWith({title: 'Sun', sort: TITLE_ASCENDING, signal: expect.any(AbortSignal)});
++    });
++
++    test('refreshPhotographs does not show the loading state', async () => {
++        const {result} = await renderLoadedPhotographs([SUNSET, NIGHT]);
++        mockedGetPhotographs.mockReturnValue(new Promise(() => undefined));
++
++        act(() => result.current.refreshPhotographs());
++
++        expect(result.current.isLoading).toBe(false);
++        expect(Array.from(result.current.photographs)).toEqual([SUNSET, NIGHT]);
++    });
+ });
+ 
+ const renderPhotographs = () => {
+diff --git a/src/context/PhotographContext.tsx b/src/context/PhotographContext.tsx
+index 913ef42..6031753 100644
+--- a/src/context/PhotographContext.tsx
++++ b/src/context/PhotographContext.tsx
+@@ -4,14 +4,21 @@ import {getPhotographs} from "../api/client.ts";
+ import type {PhotographDTO} from "../types";
+ import { CircularArray } from "../data-structures/CircularArray.ts";
+ import {extractErrorMessage} from "../api/error.ts";
++import {DEFAULT_PHOTOGRAPH_SORT, isSamePhotographSort, type PhotographSort} from "../types/PhotographSort.ts";
+ 
+ interface PhotographContextInterface {
+     photographs: CircularArray<PhotographDTO>,
+     isLoading: boolean,
+     error: string,
++    sort: PhotographSort,
+     searchPhotographsByTitle: (title: string) => void,
+-    addPhotograph: (response: PhotographDTO) => void,
+-    editPhotograph: (response: PhotographDTO) => void,
++    sortPhotographs: (sort: PhotographSort) => void,
++    /**
++     * Fetches the current list again, with the current title search and sort.
++     * The server owns the order, so call this after anything that may change
++     * it (an upload or an edit) instead of patching the list locally.
++     */
++    refreshPhotographs: () => void,
+     removePhotograph: (uuid: string) => void,
+ }
+ 
+@@ -23,12 +30,14 @@ export const PhotographProvider: React.FC<{ children: React.ReactNode }> = ({ ch
+     const [error, setError] = React.useState<string>('');
+ 
+     const [titleSearchTerm, setTitleSearchTerm] = React.useState<string>('');
++    const [sort, setSort] = React.useState<PhotographSort>(DEFAULT_PHOTOGRAPH_SORT);
++    const [refreshCount, setRefreshCount] = React.useState<number>(0);
+ 
+     React.useEffect(() => {
+         const abortController = new AbortController();
+         const isSuperseded = (): boolean => abortController.signal.aborted;
+ 
+-        getPhotographs({title: titleSearchTerm, signal: abortController.signal})
++        getPhotographs({title: titleSearchTerm, sort, signal: abortController.signal})
+             .then((response: PhotographDTO[]) => {
+                 if (isSuperseded()) return;
+                 setPhotographs(CircularArray.from(response));
+@@ -44,34 +53,37 @@ export const PhotographProvider: React.FC<{ children: React.ReactNode }> = ({ ch
+             });
+ 
+         return () => abortController.abort();
+-    }, [titleSearchTerm]);
++    }, [titleSearchTerm, sort, refreshCount]);
+ 
+     const searchPhotographsByTitle = React.useCallback((title: string): void => {
+         setTitleSearchTerm(title.trim());
+     }, []);
+ 
+-    const addPhotograph = (response: PhotographDTO): void => {
+-        setPhotographs((prev: CircularArray<PhotographDTO>) => CircularArray.from([response, ...prev]));
+-    };
++    const sortPhotographs = React.useCallback((nextSort: PhotographSort): void => {
++        setSort((previous: PhotographSort) => isSamePhotographSort(previous, nextSort) ? previous : nextSort);
++    }, []);
+ 
+-    const editPhotograph = (response: PhotographDTO): void => {
+-        setPhotographs((prev: CircularArray<PhotographDTO>) => prev.reduce<CircularArray<PhotographDTO>>(
+-            (accumulator: CircularArray<PhotographDTO>, current: PhotographDTO): CircularArray<PhotographDTO> => {
+-                accumulator.push(current.uuid === response.uuid ? response : current);
+-                return accumulator;
+-            },
+-            new CircularArray()
+-        ));
+-    };
++    const refreshPhotographs = React.useCallback((): void => {
++        setRefreshCount((previous: number) => previous + 1);
++    }, []);
+ 
+-    const removePhotograph = (uuid: string): void => {
++    const removePhotograph = React.useCallback((uuid: string): void => {
+         setPhotographs((prev: CircularArray<PhotographDTO>) => CircularArray.from(
+             prev.filter((photograph: PhotographDTO) => photograph.uuid !== uuid)
+         ));
+-    };
++    }, []);
+ 
+     return (
+-        <PhotographContext.Provider value={{photographs, isLoading, error, searchPhotographsByTitle, addPhotograph, editPhotograph, removePhotograph}}>
++        <PhotographContext.Provider value={{
++            photographs,
++            isLoading,
++            error,
++            sort,
++            searchPhotographsByTitle,
++            sortPhotographs,
++            refreshPhotographs,
++            removePhotograph,
++        }}>
+             {children}
+         </PhotographContext.Provider>
+     );
+diff --git a/src/dom/isAnyModalOpen.ts b/src/dom/isAnyModalOpen.ts
+new file mode 100644
+index 0000000..0fdca5e
+--- /dev/null
++++ b/src/dom/isAnyModalOpen.ts
+@@ -0,0 +1,11 @@
++/*
++ * Every modal in the app renders a .modal-overlay or .modal-overlay-edit element.
++ * Checking the DOM at the moment it matters covers modals owned by other
++ * components (PhotoGallery's show, edit and delete modals), whose state the
++ * caller cannot see. A new modal must keep this convention.
++ */
++const MODAL_OVERLAY_SELECTOR = '.modal-overlay, .modal-overlay-edit';
++
++export const isAnyModalOpen = (): boolean => {
++    return document.querySelector(MODAL_OVERLAY_SELECTOR) !== null;
++};
+diff --git a/src/types/PhotographSort.ts b/src/types/PhotographSort.ts
+new file mode 100644
+index 0000000..9dd2830
+--- /dev/null
++++ b/src/types/PhotographSort.ts
+@@ -0,0 +1,19 @@
++export type PhotographSortField = 'createdAt' | 'updatedAt' | 'title';
++
++export type SortDirection = 'asc' | 'desc';
++
++export type PhotographSort = {
++    field: PhotographSortField;
++    direction: SortDirection;
++};
++
++/*
++ * Mirrors the server's default (GetQuery). Sending it explicitly keeps the
++ * client and the label in the dropdown honest even if the server default
++ * ever changes.
++ */
++export const DEFAULT_PHOTOGRAPH_SORT: PhotographSort = {field: 'createdAt', direction: 'desc'};
++
++export const isSamePhotographSort = (a: PhotographSort, b: PhotographSort): boolean => {
++    return a.field === b.field && a.direction === b.direction;
++};

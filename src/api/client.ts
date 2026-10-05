@@ -3,6 +3,7 @@ import axios from 'axios';
 import { api } from './config';
 import type {PhotographDTO} from "../types";
 import type {DescriptionDTO} from "../types/DescriptionDTO.ts";
+import type {PhotographSort, PhotographSortField, SortDirection} from "../types/PhotographSort.ts";
 
 let cachedToken: string | null = null;
 
@@ -33,27 +34,49 @@ export const postLogin = async({ username, password }: postLoginPayload): Promis
 
 interface getPhotographsInput {
     title?: string,
+    sort?: PhotographSort,
     signal?: AbortSignal,
 }
 
-export const getPhotographs = async ({ title, signal }: getPhotographsInput = {}): Promise<PhotographDTO[]> => {
-    const token = await getAnonymousToken();
+interface getPhotographsParams {
+    title?: string,
+    sortField?: PhotographSortField,
+    sortDirection?: SortDirection,
+}
 
-    const params = (title?: string): { title: string } | undefined => {
-        const trimmedTitle = title?.trim();
-        return trimmedTitle ? { title: trimmedTitle } : undefined;
-    };
+export const getPhotographs = async ({ title, sort, signal }: getPhotographsInput = {}): Promise<PhotographDTO[]> => {
+    const token = await getAnonymousToken();
 
     const response = await axios.get<PhotographDTO[]>(
         api.url("/photographs"),
         {
             headers: { Authorization: `Bearer ${token}` },
-            params: params(title),
+            params: createGetPhotographsParams(title, sort),
             signal,
         }
     );
 
     return response.data;
+};
+
+/*
+ * Parameters that are not set are left out of the query string entirely, so
+ * the server applies its own defaults instead of receiving empty values.
+ */
+const createGetPhotographsParams = (title?: string, sort?: PhotographSort): getPhotographsParams | undefined => {
+    const params: getPhotographsParams = {};
+
+    const trimmedTitle = title?.trim();
+    if (trimmedTitle) {
+        params.title = trimmedTitle;
+    }
+
+    if (sort) {
+        params.sortField = sort.field;
+        params.sortDirection = sort.direction;
+    }
+
+    return Object.keys(params).length > 0 ? params : undefined;
 };
 
 interface postPhotographInput {
