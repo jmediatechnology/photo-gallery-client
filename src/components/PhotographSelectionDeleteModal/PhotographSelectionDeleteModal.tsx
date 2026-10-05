@@ -60,7 +60,7 @@ export const PhotographSelectionDeleteModal: React.FC<PhotographSelectionDeleteM
     };
 
     const handleConfirm = () => {
-        if (!token || hasStarted) {
+        if (!token) {
             return;
         }
 

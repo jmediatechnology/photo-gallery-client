@@ -31,7 +31,7 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
 
     const handleUpload = () => {
 
-        if (!token || isBusy) {
+        if (!token) {
             return;
         }
 
@@ -109,7 +109,7 @@ export const PhotographUploadModal: React.FC<UploadModalProps> = ({onClose}: Upl
                     <textarea
                         id="description"
                         className=""
-                        value={description ?? ''}
+                        value={description}
                         onChange={(e) => setDescription(e.target.value)}
                     />
                 </div>

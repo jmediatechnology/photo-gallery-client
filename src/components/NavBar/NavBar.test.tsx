@@ -20,14 +20,30 @@ vi.mock("../../context/PhotographSelectionContext.tsx", () => ({
 }));
 
 /*
- * The modal has its own tests; here it only needs to show whether NavBar
- * opened it and to close it again. It renders a .modal-overlay like every
- * real modal does.
+ * The modals have their own tests; here they only need to show whether NavBar
+ * opened them and to close them again. Each renders a .modal-overlay like
+ * every real modal does.
  */
 vi.mock("../PhotographSelectionDeleteModal/PhotographSelectionDeleteModal.tsx", () => ({
     PhotographSelectionDeleteModal: ({onClose}: {onClose: () => void}) => (
         <div className="modal-overlay" data-testid="selection-delete-modal">
             <button onClick={onClose}>Close selection delete modal</button>
+        </div>
+    ),
+}));
+
+vi.mock("../LoginModal/LoginModal.tsx", () => ({
+    LoginModal: ({onClose}: {onClose: () => void}) => (
+        <div className="modal-overlay" data-testid="login-modal">
+            <button onClick={onClose}>Close login modal</button>
+        </div>
+    ),
+}));
+
+vi.mock("../PhotographUploadModal/PhotographUploadModal.tsx", () => ({
+    PhotographUploadModal: ({onClose}: {onClose: () => void}) => (
+        <div className="modal-overlay" data-testid="upload-modal">
+            <button onClick={onClose}>Close upload modal</button>
         </div>
     ),
 }));
@@ -63,118 +79,215 @@ describe('NavBar', () => {
     afterEach(() => {
         unrelatedModals.forEach((overlay: HTMLElement) => overlay.remove());
         unrelatedModals = [];
+        vi.unstubAllGlobals();
         vi.clearAllMocks();
     });
 
-    test('shows the login link to anonymous visitors', () => {
-        render(<NavBar />);
+    describe('authentication', () => {
+        test('shows the login link to anonymous visitors', () => {
+            render(<NavBar />);
 
-        expect(screen.getByText('Login')).toBeInTheDocument();
+            expect(screen.getByRole('link', {name: 'Login'})).toBeInTheDocument();
+            expect(screen.queryByRole('link', {name: 'Logout'})).not.toBeInTheDocument();
+        });
+
+        test('opens the login modal from the login link', () => {
+            render(<NavBar />);
+
+            fireEvent.click(screen.getByRole('link', {name: 'Login'}));
+
+            expect(screen.getByTestId('login-modal')).toBeInTheDocument();
+        });
+
+        test('closes the login modal', () => {
+            render(<NavBar />);
+            fireEvent.click(screen.getByRole('link', {name: 'Login'}));
+
+            fireEvent.click(screen.getByRole('button', {name: 'Close login modal'}));
+
+            expect(screen.queryByTestId('login-modal')).not.toBeInTheDocument();
+        });
+
+        test('shows who is logged in instead of the login link', () => {
+            mockedUseAuth.mockReturnValue(USER);
+
+            render(<NavBar />);
+
+            expect(screen.getByText('Logged in as', {exact: false})).toHaveTextContent('Logged in as user');
+            expect(screen.getByRole('link', {name: 'Logout'})).toBeInTheDocument();
+            expect(screen.queryByRole('link', {name: 'Login'})).not.toBeInTheDocument();
+        });
+
+        test('reloads the page on logout', () => {
+            const reload = vi.fn<() => void>();
+            vi.stubGlobal('location', {...window.location, reload});
+            mockedUseAuth.mockReturnValue(USER);
+            render(<NavBar />);
+
+            fireEvent.click(screen.getByRole('link', {name: 'Logout'}));
+
+            expect(reload).toHaveBeenCalledOnce();
+        });
     });
 
-    test('shows no selection count when nothing is selected', () => {
-        render(<NavBar />);
+    describe('upload', () => {
+        test.each([
+            ['anonymous visitors', ANONYMOUS],
+            ['users who are not admin', USER],
+        ])('hides the upload link from %s', (_: string, auth: typeof ANONYMOUS | typeof USER) => {
+            mockedUseAuth.mockReturnValue(auth);
 
-        expect(screen.queryByTestId('navbar-selection-count')).not.toBeInTheDocument();
+            render(<NavBar />);
+
+            expect(screen.queryByRole('link', {name: 'Upload'})).not.toBeInTheDocument();
+        });
+
+        test('opens the upload modal from the upload link', () => {
+            mockedUseAuth.mockReturnValue(ADMIN);
+            render(<NavBar />);
+
+            fireEvent.click(screen.getByRole('link', {name: 'Upload'}));
+
+            expect(screen.getByTestId('upload-modal')).toBeInTheDocument();
+        });
+
+        test('closes the upload modal', () => {
+            mockedUseAuth.mockReturnValue(ADMIN);
+            render(<NavBar />);
+            fireEvent.click(screen.getByRole('link', {name: 'Upload'}));
+
+            fireEvent.click(screen.getByRole('button', {name: 'Close upload modal'}));
+
+            expect(screen.queryByTestId('upload-modal')).not.toBeInTheDocument();
+        });
     });
 
-    test('shows the number of selected photographs', () => {
-        selectPhotographs([SUNSET, NIGHT]);
+    describe('selection', () => {
+        test('shows no selection count when nothing is selected', () => {
+            render(<NavBar />);
 
-        render(<NavBar />);
+            expect(screen.queryByTestId('navbar-selection-count')).not.toBeInTheDocument();
+        });
 
-        expect(screen.getByTestId('navbar-selection-count')).toHaveTextContent('2 selected');
+        test('shows no delete link to admins when nothing is selected', () => {
+            mockedUseAuth.mockReturnValue(ADMIN);
+
+            render(<NavBar />);
+
+            expect(screen.queryByRole('link', {name: 'Delete selected'})).not.toBeInTheDocument();
+        });
+
+        test('shows the number of selected photographs', () => {
+            selectPhotographs([SUNSET, NIGHT]);
+
+            render(<NavBar />);
+
+            expect(screen.getByTestId('navbar-selection-count')).toHaveTextContent('2 selected');
+        });
+
+        test('hides the delete link from users who are not admin', () => {
+            mockedUseAuth.mockReturnValue(USER);
+            selectPhotographs([SUNSET]);
+
+            render(<NavBar />);
+
+            expect(screen.queryByRole('link', {name: 'Delete selected'})).not.toBeInTheDocument();
+        });
+
+        test('opens the selection delete modal from the delete link', () => {
+            mockedUseAuth.mockReturnValue(ADMIN);
+            selectPhotographs([SUNSET]);
+            render(<NavBar />);
+
+            fireEvent.click(screen.getByRole('link', {name: 'Delete selected'}));
+
+            expect(screen.getByTestId('selection-delete-modal')).toBeInTheDocument();
+        });
+
+        test('opens the selection delete modal with the Delete key', () => {
+            mockedUseAuth.mockReturnValue(ADMIN);
+            selectPhotographs([SUNSET]);
+            render(<NavBar />);
+
+            pressDeleteKey();
+
+            expect(screen.getByTestId('selection-delete-modal')).toBeInTheDocument();
+        });
+
+        test('closes the selection delete modal', () => {
+            mockedUseAuth.mockReturnValue(ADMIN);
+            selectPhotographs([SUNSET]);
+            render(<NavBar />);
+            pressDeleteKey();
+
+            fireEvent.click(screen.getByRole('button', {name: 'Close selection delete modal'}));
+
+            expect(screen.queryByTestId('selection-delete-modal')).not.toBeInTheDocument();
+        });
+
+        test('ignores the Delete key when nothing is selected', () => {
+            mockedUseAuth.mockReturnValue(ADMIN);
+            render(<NavBar />);
+
+            pressDeleteKey();
+
+            expect(screen.queryByTestId('selection-delete-modal')).not.toBeInTheDocument();
+        });
+
+        test('ignores the Delete key for users who are not admin', () => {
+            mockedUseAuth.mockReturnValue(USER);
+            selectPhotographs([SUNSET]);
+            render(<NavBar />);
+
+            pressDeleteKey();
+
+            expect(screen.queryByTestId('selection-delete-modal')).not.toBeInTheDocument();
+        });
+
+        test.each([
+            ['the show modal', 'modal-overlay'],
+            ['the edit modal', 'modal-overlay-edit'],
+        ])('ignores the Delete key while %s is open', (_: string, overlayClassName: string) => {
+            mockedUseAuth.mockReturnValue(ADMIN);
+            selectPhotographs([SUNSET]);
+            render(<NavBar />);
+            openUnrelatedModal(overlayClassName);
+
+            pressDeleteKey();
+
+            expect(screen.queryByTestId('selection-delete-modal')).not.toBeInTheDocument();
+        });
+
+        test('ignores the Delete key while the upload modal is open', () => {
+            mockedUseAuth.mockReturnValue(ADMIN);
+            selectPhotographs([SUNSET]);
+            render(<NavBar />);
+            fireEvent.click(screen.getByRole('link', {name: 'Upload'}));
+
+            pressDeleteKey();
+
+            expect(screen.queryByTestId('selection-delete-modal')).not.toBeInTheDocument();
+        });
     });
 
-    test('hides the delete link from users who are not admin', () => {
-        mockedUseAuth.mockReturnValue(USER);
-        selectPhotographs([SUNSET]);
+    describe('browsing', () => {
+        test('lets every visitor search photographs by title', () => {
+            render(<NavBar />);
 
-        render(<NavBar />);
+            fireEvent.change(screen.getByRole('searchbox', {name: 'Search photographs by title'}), {target: {value: 'Sun'}});
+            fireEvent.submit(screen.getByRole('search'));
 
-        expect(screen.queryByRole('link', {name: 'Delete selected'})).not.toBeInTheDocument();
-    });
+            expect(searchPhotographsByTitle).toHaveBeenCalledWith('Sun');
+        });
 
-    test('opens the selection delete modal from the delete link', () => {
-        mockedUseAuth.mockReturnValue(ADMIN);
-        selectPhotographs([SUNSET]);
-        render(<NavBar />);
+        test('lets every visitor sort the photographs', () => {
+            render(<NavBar />);
 
-        fireEvent.click(screen.getByRole('link', {name: 'Delete selected'}));
+            fireEvent.click(screen.getByRole('button', {name: 'Newest first'}));
+            fireEvent.click(screen.getByRole('menuitemradio', {name: 'Title A–Z'}));
 
-        expect(screen.getByTestId('selection-delete-modal')).toBeInTheDocument();
-    });
-
-    test('opens the selection delete modal with the Delete key', () => {
-        mockedUseAuth.mockReturnValue(ADMIN);
-        selectPhotographs([SUNSET]);
-        render(<NavBar />);
-
-        pressDeleteKey();
-
-        expect(screen.getByTestId('selection-delete-modal')).toBeInTheDocument();
-    });
-
-    test('closes the selection delete modal', () => {
-        mockedUseAuth.mockReturnValue(ADMIN);
-        selectPhotographs([SUNSET]);
-        render(<NavBar />);
-        pressDeleteKey();
-
-        fireEvent.click(screen.getByRole('button', {name: 'Close selection delete modal'}));
-
-        expect(screen.queryByTestId('selection-delete-modal')).not.toBeInTheDocument();
-    });
-
-    test('ignores the Delete key when nothing is selected', () => {
-        mockedUseAuth.mockReturnValue(ADMIN);
-        render(<NavBar />);
-
-        pressDeleteKey();
-
-        expect(screen.queryByTestId('selection-delete-modal')).not.toBeInTheDocument();
-    });
-
-    test('ignores the Delete key for users who are not admin', () => {
-        mockedUseAuth.mockReturnValue(USER);
-        selectPhotographs([SUNSET]);
-        render(<NavBar />);
-
-        pressDeleteKey();
-
-        expect(screen.queryByTestId('selection-delete-modal')).not.toBeInTheDocument();
-    });
-
-    test.each([
-        ['the show modal', 'modal-overlay'],
-        ['the edit modal', 'modal-overlay-edit'],
-    ])('ignores the Delete key while %s is open', (_: string, overlayClassName: string) => {
-        mockedUseAuth.mockReturnValue(ADMIN);
-        selectPhotographs([SUNSET]);
-        render(<NavBar />);
-        openUnrelatedModal(overlayClassName);
-
-        pressDeleteKey();
-
-        expect(screen.queryByTestId('selection-delete-modal')).not.toBeInTheDocument();
-    });
-
-    test('lets every visitor search photographs by title', () => {
-        render(<NavBar />);
-
-        fireEvent.change(screen.getByRole('searchbox', {name: 'Search photographs by title'}), {target: {value: 'Sun'}});
-        fireEvent.submit(screen.getByRole('search'));
-
-        expect(searchPhotographsByTitle).toHaveBeenCalledWith('Sun');
-    });
-
-    test('lets every visitor sort the photographs', () => {
-        render(<NavBar />);
-
-        fireEvent.click(screen.getByRole('button', {name: 'Newest first'}));
-        fireEvent.click(screen.getByRole('menuitemradio', {name: 'Title A–Z'}));
-
-        expect(sortPhotographs).toHaveBeenCalledWith({field: 'title', direction: 'asc'});
+            expect(sortPhotographs).toHaveBeenCalledWith({field: 'title', direction: 'asc'});
+        });
     });
 });
 

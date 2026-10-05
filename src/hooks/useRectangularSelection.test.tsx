@@ -199,21 +199,99 @@ describe('useRectangularSelection', () => {
         expect(window.cancelAnimationFrame).toHaveBeenCalled();
         expect(onSelectionChange).not.toHaveBeenCalledWith(ALL_PHOTOGRAPHS);
     });
+
+    test('does not start a selection on mousedown on an icon inside a photograph', () => {
+        const onSelectionChange = vi.fn<() => void>();
+        render(<SelectionHarness onSelectionChange={onSelectionChange} />);
+
+        fireEvent.mouseDown(screen.getByTestId('top-left-icon'), {button: 0, clientX: 150, clientY: 100});
+
+        expect(onSelectionChange).not.toHaveBeenCalled();
+        expect(getContainer()).toHaveAttribute('data-selecting', 'false');
+    });
+
+    test('treats a mousedown whose target is not an element as empty space', () => {
+        const onSelectionChange = vi.fn<() => void>();
+        let selection!: ReturnType<typeof useRectangularSelection>;
+        render(<SelectionHarness onSelectionChange={onSelectionChange} onRender={(latest) => { selection = latest; }} />);
+
+        act(() => {
+            selection.onMouseDown({button: 0, target: null, clientX: 105, clientY: 55, preventDefault: vi.fn()} as never);
+        });
+
+        expect(onSelectionChange).toHaveBeenCalledWith(new Set());
+        expect(getContainer()).toHaveAttribute('data-selecting', 'true');
+    });
+
+    test('ignores mousedown when containerRef is not attached to an element', () => {
+        const onSelectionChange = vi.fn<() => void>();
+        render(<SelectionHarness onSelectionChange={onSelectionChange} containerRefMode="never-attached" />);
+
+        pressAt(105, 55);
+
+        expect(onSelectionChange).not.toHaveBeenCalled();
+        expect(getContainer()).toHaveAttribute('data-selecting', 'false');
+    });
+
+    test('never selects a photograph element without a uuid', async () => {
+        const onSelectionChange = vi.fn<() => void>();
+        render(<SelectionHarness onSelectionChange={onSelectionChange} photographUuids={['top-left', '']} />);
+
+        pressAt(105, 55);
+        moveTo(415, 365);
+        await flushAnimationFrame();
+
+        expect(onSelectionChange).toHaveBeenLastCalledWith(new Set(['top-left']));
+    });
+
+    test('ignores moves but still ends the selection when the container is detached mid-drag', () => {
+        const onSelectionChange = vi.fn<() => void>();
+        render(<SelectionHarness onSelectionChange={onSelectionChange} containerRefMode="detached-while-selecting" />);
+
+        pressAt(105, 55);
+        moveTo(415, 365);
+
+        expect(window.requestAnimationFrame).not.toHaveBeenCalled();
+
+        fireEvent.mouseUp(window);
+
+        expect(getContainer()).toHaveAttribute('data-selecting', 'false');
+    });
 });
 
-const SelectionHarness = ({onSelectionChange}: {onSelectionChange: (uuids: Set<string>) => void}) => {
-    const {containerRef, onMouseDown, isSelecting, selectionRectangle} = useRectangularSelection({onSelectionChange});
+type ContainerRefMode = 'attached' | 'never-attached' | 'detached-while-selecting';
+
+interface SelectionHarnessProps {
+    onSelectionChange: (uuids: Set<string>) => void,
+    containerRefMode?: ContainerRefMode,
+    photographUuids?: string[],
+    onRender?: (selection: ReturnType<typeof useRectangularSelection>) => void,
+}
+
+const SelectionHarness = ({
+                              onSelectionChange,
+                              containerRefMode = 'attached',
+                              photographUuids = Object.keys(PHOTOGRAPH_RECTANGLES),
+                              onRender,
+                          }: SelectionHarnessProps) => {
+    const selection = useRectangularSelection({onSelectionChange});
+    const {containerRef, onMouseDown, isSelecting, selectionRectangle} = selection;
+    onRender?.(selection);
+
+    const isContainerRefAttached = containerRefMode === 'attached'
+        || (containerRefMode === 'detached-while-selecting' && !isSelecting);
 
     return (
         <div
-            ref={containerRef}
+            ref={isContainerRefAttached ? containerRef : undefined}
             data-testid="container"
             data-selecting={String(isSelecting)}
             onMouseDown={onMouseDown}
         >
-            {Object.keys(PHOTOGRAPH_RECTANGLES).map((uuid: string) => (
+            {photographUuids.map((uuid: string) => (
                 <div key={uuid} {...{[PHOTOGRAPH_UUID_ATTRIBUTE]: uuid}}>
                     <img alt={uuid} />
+                    <svg data-testid={`${uuid}-icon`} />
                 </div>
             ))}
             {selectionRectangle && (

@@ -40,7 +40,7 @@ export const ThumbnailFooter = ({ photographs, offset, onSelect }: ThumbnailFoot
 
                 return <img
                     key={index}
-                    src={api.url(photograph.filePath ?? '')}
+                    src={api.url(photograph.filePath)}
                     alt={photograph.title}
                     loading="lazy"
                     onClick={() => onSelect(photograph)}

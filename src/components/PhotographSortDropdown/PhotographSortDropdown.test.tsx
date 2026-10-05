@@ -119,6 +119,52 @@ describe('PhotographSortDropdown', () => {
 
         expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     });
+
+    test('ignores keys other than the arrows inside the menu', () => {
+        renderDropdown();
+        fireEvent.click(trigger());
+        const newestFirst = screen.getByRole('menuitemradio', {name: 'Newest first'});
+
+        const notPrevented = fireEvent.keyDown(screen.getByRole('menu'), {key: 'Home'});
+
+        expect(notPrevented).toBe(true);
+        expect(newestFirst).toHaveFocus();
+    });
+
+    test('stays open on keys other than Escape', () => {
+        renderDropdown();
+        fireEvent.click(trigger());
+
+        fireEvent.keyDown(window, {key: 'Enter'});
+
+        expect(screen.getByRole('menu')).toBeInTheDocument();
+    });
+
+    /*
+     * Guards against PhotographSort gaining a field or direction that
+     * PHOTOGRAPH_SORT_OPTIONS does not list yet. The cast stands in for that
+     * drift, since the current type cannot express it.
+     */
+    describe('when the current sort is not one of the options', () => {
+        const UNLISTED_SORT = {field: 'title', direction: 'sideways'} as unknown as PhotographSort;
+
+        test('shows a generic label on the button', () => {
+            renderDropdown(UNLISTED_SORT);
+
+            expect(trigger()).toHaveTextContent('Sort');
+        });
+
+        test('checks no option and focuses the first one when it opens', () => {
+            renderDropdown(UNLISTED_SORT);
+
+            fireEvent.click(trigger());
+
+            screen.getAllByRole('menuitemradio').forEach((option: HTMLElement) => {
+                expect(option).toHaveAttribute('aria-checked', 'false');
+            });
+            expect(screen.getByRole('menuitemradio', {name: 'Newest first'})).toHaveFocus();
+        });
+    });
 });
 
 const renderDropdown = (sort: PhotographSort = DEFAULT_PHOTOGRAPH_SORT) => {

@@ -2,6 +2,7 @@ import {fireEvent, render, screen, waitFor, within} from "@testing-library/react
 import {afterEach, beforeEach, describe, expect, test, vi, type Mock} from "vitest";
 import type {PhotographDTO} from "../../types";
 import {deletePhotograph} from "../../api/client.ts";
+import {useAuth} from "../../context/AuthContext.tsx";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
 import {usePhotographSelection} from "../../context/PhotographSelectionContext.tsx";
 import {PhotographSelectionDeleteModal} from "./PhotographSelectionDeleteModal.tsx";
@@ -17,7 +18,7 @@ vi.mock("../../api/config.ts", () => ({
 }));
 
 vi.mock("../../context/AuthContext.tsx", () => ({
-    useAuth: () => ({token: 'test-token'}),
+    useAuth: vi.fn<() => void>(),
 }));
 
 vi.mock("../../context/PhotographContext.tsx", () => ({
@@ -29,6 +30,7 @@ vi.mock("../../context/PhotographSelectionContext.tsx", () => ({
 }));
 
 const mockedDeletePhotograph = deletePhotograph as Mock;
+const mockedUseAuth = useAuth as Mock;
 const mockedUsePhotographs = usePhotographs as Mock;
 const mockedUsePhotographSelection = usePhotographSelection as Mock;
 
@@ -41,6 +43,7 @@ describe('PhotographSelectionDeleteModal', () => {
     const deselectPhotograph = vi.fn<() => void>();
 
     beforeEach(() => {
+        mockedUseAuth.mockReturnValue({token: 'test-token'});
         mockedUsePhotographs.mockReturnValue({removePhotograph});
         mockedUsePhotographSelection.mockReturnValue({
             selectedPhotographs: [SUNSET, NIGHT],
@@ -156,6 +159,40 @@ describe('PhotographSelectionDeleteModal', () => {
         const closeButton = await screen.findByText('Close');
         fireEvent.click(closeButton);
         expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    test('deletes nothing without a token', () => {
+        mockedUseAuth.mockReturnValue({token: null});
+        render(<PhotographSelectionDeleteModal onClose={vi.fn<() => void>()} />);
+
+        fireEvent.click(screen.getByRole('button', {name: 'Delete'}));
+
+        expect(mockedDeletePhotograph).not.toHaveBeenCalled();
+        expect(screen.getByRole('button', {name: 'Delete'})).toBeEnabled();
+    });
+
+    test.each([
+        ['the close button', () => fireEvent.click(screen.getByRole('button', {name: 'Close'}))],
+        ['a click on the overlay', () => fireEvent.click(screen.getByTestId('modal-overlay'))],
+        ['the Escape key', () => fireEvent.keyDown(document, {key: 'Escape', code: 'Escape'})],
+    ])('closes with %s before deleting', (_: string, close: () => void) => {
+        const onClose = vi.fn<() => void>();
+        render(<PhotographSelectionDeleteModal onClose={onClose} />);
+
+        close();
+
+        expect(onClose).toHaveBeenCalledTimes(1);
+        expect(mockedDeletePhotograph).not.toHaveBeenCalled();
+    });
+
+    test('does not close when clicking inside the modal content', () => {
+        const onClose = vi.fn<() => void>();
+        render(<PhotographSelectionDeleteModal onClose={onClose} />);
+
+        fireEvent.click(screen.getByRole('heading', {name: 'Delete 2 photographs?'}));
+        fireEvent.click(getRow('Sunset'));
+
+        expect(onClose).not.toHaveBeenCalled();
     });
 
     test('keeps every row visible when the selection changes after opening', () => {

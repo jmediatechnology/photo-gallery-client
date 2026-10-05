@@ -14,6 +14,8 @@ interface PhotographEditModalProps {
     onClose: () => void,
 }
 
+type PendingRequest = 'update' | 'generate-description';
+
 export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, onClose}: PhotographEditModalProps) => {
     useEscape(onClose);
     const { token } = useAuth();
@@ -22,16 +24,18 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
     const [title, setTitle] = React.useState(photo.title);
     const [description, setDescription] = React.useState(photo.description || null);
 
-    const [isBusy, setIsBusy] = React.useState(false);
+    const [pendingRequest, setPendingRequest] = React.useState<PendingRequest | null>(null);
     const [error, setError] = React.useState<string | null>(null);
+
+    const isBusy = pendingRequest !== null;
 
     const handleEdit = () => {
 
-        if (!token || isBusy) {
+        if (!token) {
             return;
         }
 
-        setIsBusy(true);
+        setPendingRequest('update');
 
         patchPhotograph({
             token,
@@ -44,17 +48,17 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
         }).catch((response) => {
             setError(extractErrorMessage(response, 'Failed to edit photograph'));
         }).finally(() => {
-            setIsBusy(false);
+            setPendingRequest(null);
         });
     };
 
     const handleGenerateDescription = () => {
 
-        if (!token || isBusy) {
+        if (!token) {
             return;
         }
 
-        setIsBusy(true);
+        setPendingRequest('generate-description');
 
         postGenerateDescription({
             token,
@@ -64,7 +68,7 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
         }).catch((response) => {
             setError(extractErrorMessage(response, 'Failed to generate description'));
         }).finally(() => {
-            setIsBusy(false);
+            setPendingRequest(null);
         });
     };
 
@@ -120,7 +124,7 @@ export const PhotographEditModal: React.FC<PhotographEditModalProps> = ({photo, 
 
                 <div className="modal-actions">
                     <button onClick={handleGenerateDescription} disabled={isBusy}>
-                        <HiOutlineSparkles />{isBusy ? 'Generating…' : 'Generate description'}
+                        <HiOutlineSparkles />{pendingRequest === 'generate-description' ? 'Generating…' : 'Generate description'}
                     </button>
                 </div>
 

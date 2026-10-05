@@ -1,36 +1,31 @@
-import {render, screen, waitFor} from "@testing-library/react";
+import {fireEvent, render, screen, waitFor} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import {afterEach, beforeEach, describe, expect, test, vi, type Mock} from "vitest";
 import {PhotographUploadModal} from "./PhotographUploadModal.tsx";
-import {afterEach, type Mock, vi} from "vitest";
-import {AuthProvider} from "../../context/AuthContext.tsx";
+import {useAuth} from "../../context/AuthContext.tsx";
 import {usePhotographs} from "../../context/PhotographContext.tsx";
 import {postPhotograph} from "../../api/client.ts";
 import type {PhotographDTO} from "../../types";
 import {createAxiosError} from "../../../tests/utils/createAxiosError.ts";
 
-vi.mock(import('../../context/AuthContext.tsx'), async (importOriginal) => {
-    const actual = await importOriginal();
-    return {
-        ...actual,
-        useAuth: () => ({
-            token: 'xxxx',
-            username: 'test-user',
-            roles: ['ROLE_ADMIN'],
-            setToken: vi.fn<() => void>()
-        })
-    };
-});
+vi.mock("../../context/AuthContext.tsx", () => ({
+    useAuth: vi.fn<() => void>(),
+}));
 
-vi.mock('../../context/PhotographContext', () => ({
+vi.mock("../../context/PhotographContext.tsx", () => ({
     usePhotographs: vi.fn<() => void>(),
 }));
 
-vi.mock('../../api/client', () => ({
+vi.mock("../../api/client.ts", () => ({
     postPhotograph: vi.fn<() => void>(),
 }));
 
+const mockedUseAuth = useAuth as Mock;
 const mockedUsePhotographs = usePhotographs as Mock;
 const mockedPostPhotograph = postPhotograph as Mock;
+
+const ADMIN = {username: 'admin', roles: ['ROLE_ADMIN'], token: 'xxxx'};
+const ANONYMOUS = {username: null, roles: null, token: null};
 
 const mockPhoto = {
     uuid: '123',
@@ -47,107 +42,126 @@ const mockOnClose = vi.fn<() => void>();
 describe('PhotographUploadModal', () => {
 
     beforeEach(() => {
-        mockedUsePhotographs.mockReturnValue({
-            photographs: [],
-            isLoading: false,
-            error: '',
-            refreshPhotographs: mockRefreshPhotographs,
-            removePhotograph: vi.fn<() => void>(),
-        });
+        mockedUseAuth.mockReturnValue(ADMIN);
+        mockedUsePhotographs.mockReturnValue({refreshPhotographs: mockRefreshPhotographs});
     });
 
     afterEach(() => {
         vi.clearAllMocks();
     });
 
-    test('renders title, description, file input and upload button', () => {
-        render(
-            <AuthProvider>
-                <PhotographUploadModal onClose={mockOnClose} />
-            </AuthProvider>
-        );
+    describe('rendering', () => {
+        test('renders title, description, file input and upload button', () => {
+            renderUploadModal();
 
-        const title = screen.getByText('Title');
-        const description = screen.getByText('Description');
-        const fileInput = screen.getByTestId('muli-file-upload-input-element');
-        const upload = screen.getByRole('button', { name: 'Upload' });
-
-        expect(title).toBeInTheDocument();
-        expect(description).toBeInTheDocument();
-        expect(fileInput).toHaveAttribute('multiple');
-        expect(upload).toBeInTheDocument();
+            expect(screen.getByRole('heading', {name: 'Upload'})).toBeInTheDocument();
+            expect(titleInput()).toHaveFocus();
+            expect(descriptionInput()).toHaveValue('');
+            expect(fileInput()).toHaveAttribute('multiple');
+            expect(uploadButton()).toBeEnabled();
+        });
     });
 
-    test('shows validation error and does not upload when title is missing', async () => {
-        render(
-            <AuthProvider>
-                <PhotographUploadModal onClose={mockOnClose} />
-            </AuthProvider>
-        );
+    describe('validation', () => {
+        test('shows validation error and does not upload when title is missing', async () => {
+            const user = userEvent.setup();
+            renderUploadModal();
 
-        const file = new File(['photo'], 'photo.jpg', { type: 'image/jpeg' });
-        const fileInput = screen.getByTestId('muli-file-upload-input-element');
-        await userEvent.upload(fileInput, file);
+            await user.upload(fileInput(), createFile('photo.jpg'));
+            await user.click(uploadButton());
 
-        const uploadButton = screen.getByRole('button', { name: 'Upload' });
-        await userEvent.click(uploadButton);
-
-        await waitFor(() => {
-            const validationError = screen.getByText('Title is required');
-            expect(validationError).toBeInTheDocument();
+            expect(await screen.findByText('Title is required')).toBeInTheDocument();
+            expect(mockedPostPhotograph).not.toHaveBeenCalled();
+            expect(mockOnClose).not.toHaveBeenCalled();
         });
 
-        expect(postPhotograph).not.toHaveBeenCalled();
-        expect(mockOnClose).not.toHaveBeenCalled();
-    });
+        test('shows validation error and does not upload when no file is selected', async () => {
+            const user = userEvent.setup();
+            renderUploadModal();
 
-    test('shows validation error and does not upload when no file is selected', async () => {
-        render(
-            <AuthProvider>
-                <PhotographUploadModal onClose={mockOnClose} />
-            </AuthProvider>
-        );
+            await user.type(titleInput(), 'Awesome Title');
+            await user.click(uploadButton());
 
-        const titleInput = screen.getByRole('textbox', { name: /title/i });
-        await userEvent.type(titleInput, 'Awesome Title');
-
-        const uploadButton = screen.getByRole('button', { name: 'Upload' });
-        await userEvent.click(uploadButton);
-
-        await waitFor(() => {
-            const validationError = screen.getByText('No file specified');
-            expect(validationError).toBeInTheDocument();
+            expect(await screen.findByText('No file specified')).toBeInTheDocument();
+            expect(mockedPostPhotograph).not.toHaveBeenCalled();
+            expect(mockOnClose).not.toHaveBeenCalled();
         });
 
-        expect(postPhotograph).not.toHaveBeenCalled();
-        expect(mockOnClose).not.toHaveBeenCalled();
+        test('requires a title when leaving the title field empty', () => {
+            renderUploadModal();
+
+            fireEvent.blur(titleInput());
+
+            expect(screen.getByText('Title is required')).toBeInTheDocument();
+        });
+
+        test('clears the title error when leaving the title field filled in', async () => {
+            const user = userEvent.setup();
+            renderUploadModal();
+            fireEvent.blur(titleInput());
+
+            await user.type(titleInput(), 'Awesome Title');
+            fireEvent.blur(titleInput());
+
+            expect(screen.queryByText('Title is required')).not.toBeInTheDocument();
+        });
+
+        test('clears the file error once a file is chosen', async () => {
+            const user = userEvent.setup();
+            renderUploadModal();
+            await user.type(titleInput(), 'Awesome Title');
+            await user.click(uploadButton());
+            await screen.findByText('No file specified');
+
+            await user.upload(fileInput(), createFile('photo.jpg'));
+
+            expect(screen.queryByText('No file specified')).not.toBeInTheDocument();
+        });
+
+        /*
+         * Browsers always give a file input a FileList; React's types allow null
+         * because they cover every input type. This test stands in for that case.
+         */
+        test('keeps no files when the input reports no file list', async () => {
+            const user = userEvent.setup();
+            renderUploadModal();
+            await user.type(titleInput(), 'Awesome Title');
+
+            fireEvent.change(fileInput(), {target: {files: null}});
+            await user.click(uploadButton());
+
+            expect(await screen.findByText('No file specified')).toBeInTheDocument();
+            expect(mockedPostPhotograph).not.toHaveBeenCalled();
+        });
     });
 
-    test('uploads a single file: resolves the promise, refreshes the photographs, and closes the modal', async () => {
+    describe('uploading', () => {
+        test('does nothing without a token', async () => {
+            mockedUseAuth.mockReturnValue(ANONYMOUS);
+            const user = userEvent.setup();
+            renderUploadModal();
 
-        mockedPostPhotograph.mockResolvedValueOnce(mockPhoto);
+            await user.type(titleInput(), 'Awesome Title');
+            await user.upload(fileInput(), createFile('photo.jpg'));
+            await user.click(uploadButton());
 
-        render(
-            <AuthProvider>
-                <PhotographUploadModal onClose={mockOnClose} />
-            </AuthProvider>
-        );
+            expect(mockedPostPhotograph).not.toHaveBeenCalled();
+            expect(screen.queryByText('Title is required')).not.toBeInTheDocument();
+        });
 
-        const titleInput = screen.getByRole('textbox', { name: /title/i });
-        const descriptionInput = screen.getByRole('textbox', { name: /description/i });
-        await userEvent.type(titleInput, 'Awesome Title');
-        await userEvent.type(descriptionInput, 'A super awesome description');
+        test('uploads a single file: resolves the promise, refreshes the photographs, and closes the modal', async () => {
+            mockedPostPhotograph.mockResolvedValueOnce(mockPhoto);
+            const user = userEvent.setup();
+            renderUploadModal();
 
-        const file = new File(['photo'], 'photo.jpg', { type: 'image/jpeg' });
-        const fileInput = screen.getByTestId('muli-file-upload-input-element');
-        await userEvent.upload(fileInput, file);
+            await user.type(titleInput(), 'Awesome Title');
+            await user.type(descriptionInput(), 'A super awesome description');
+            const file = createFile('photo.jpg');
+            await user.upload(fileInput(), file);
+            await user.click(uploadButton());
 
-        const uploadButton = screen.getByRole('button', { name: 'Upload' });
-        await userEvent.click(uploadButton);
-
-        await waitFor(() => {
-            expect(mockedPostPhotograph).toHaveBeenCalledTimes(1);
-            expect(mockedPostPhotograph).toHaveBeenCalledWith(
+            await waitFor(() => expect(mockOnClose).toHaveBeenCalledTimes(1));
+            expect(mockedPostPhotograph).toHaveBeenCalledExactlyOnceWith(
                 expect.objectContaining({
                     token: 'xxxx',
                     title: 'Awesome Title',
@@ -156,119 +170,148 @@ describe('PhotographUploadModal', () => {
                 })
             );
             expect(mockRefreshPhotographs).toHaveBeenCalledTimes(1);
+        });
+
+        test('disables the upload button while uploading', async () => {
+            const pending = deferred<PhotographDTO>();
+            mockedPostPhotograph.mockReturnValueOnce(pending.promise);
+            const user = userEvent.setup();
+            renderUploadModal();
+
+            await user.type(titleInput(), 'Awesome Title');
+            await user.upload(fileInput(), createFile('photo.jpg'));
+            await user.click(uploadButton());
+
+            expect(uploadButton()).toBeDisabled();
+
+            pending.resolve(mockPhoto);
+            await waitFor(() => expect(mockOnClose).toHaveBeenCalledTimes(1));
+        });
+
+        test('uploads multiple files: waits for every promise in Promise.all before closing', async () => {
+            const file1 = createFile('photo1.jpg');
+            const file2 = createFile('photo2.jpg');
+            const photo1 = {...mockPhoto, uuid: 'uuid-1', title: 'Awesome Title'};
+            const photo2 = {...mockPhoto, uuid: 'uuid-2', title: 'Awesome Title 2'};
+
+            // Deliberately resolve out of order to prove Promise.all waits for both,
+            // regardless of which underlying request finishes first.
+            const firstUpload = deferred<PhotographDTO>();
+            mockedPostPhotograph
+                .mockImplementationOnce(() => firstUpload.promise)
+                .mockImplementationOnce(() => Promise.resolve(photo2));
+
+            const user = userEvent.setup();
+            renderUploadModal();
+
+            await user.type(titleInput(), 'Awesome Title');
+            await user.upload(fileInput(), [file1, file2]);
+            await user.click(uploadButton());
+
+            await waitFor(() => expect(mockedPostPhotograph).toHaveBeenCalledTimes(2));
+            expect(mockOnClose).not.toHaveBeenCalled();
+            expect(mockRefreshPhotographs).not.toHaveBeenCalled();
+
+            firstUpload.resolve(photo1);
+
+            // One refresh for the whole batch, not one per file.
+            await waitFor(() => expect(mockRefreshPhotographs).toHaveBeenCalledTimes(1));
+
+            // First file keeps the plain title, subsequent files get an index suffix.
+            expect(mockedPostPhotograph).toHaveBeenNthCalledWith(1, expect.objectContaining({title: 'Awesome Title', file: file1}));
+            expect(mockedPostPhotograph).toHaveBeenNthCalledWith(2, expect.objectContaining({title: 'Awesome Title 1', file: file2}));
             expect(mockOnClose).toHaveBeenCalledTimes(1);
         });
+
+        test('shows an error and does not close the modal when upload fails', async () => {
+            mockedPostPhotograph.mockRejectedValueOnce(createAxiosError({message: 'Upload failed on server'}));
+            const user = userEvent.setup();
+            renderUploadModal();
+
+            await user.type(titleInput(), 'My Trip');
+            await user.upload(fileInput(), createFile('photo.jpg'));
+            await user.click(uploadButton());
+
+            expect(await screen.findByText('Upload failed on server')).toBeInTheDocument();
+            expect(mockOnClose).not.toHaveBeenCalled();
+            expect(uploadButton()).toBeEnabled();
+        });
+
+        test('refreshes the photographs when one of several uploads fails, since the others may have been stored', async () => {
+            mockedPostPhotograph
+                .mockResolvedValueOnce(mockPhoto)
+                .mockRejectedValueOnce(createAxiosError({message: 'Upload failed on server'}));
+            const user = userEvent.setup();
+            renderUploadModal();
+
+            await user.type(titleInput(), 'My Trip');
+            await user.upload(fileInput(), [createFile('photo1.jpg'), createFile('photo2.jpg')]);
+            await user.click(uploadButton());
+
+            await waitFor(() => {
+                expect(screen.getByText('Upload failed on server')).toBeInTheDocument();
+                expect(mockRefreshPhotographs).toHaveBeenCalledTimes(1);
+            });
+            expect(mockOnClose).not.toHaveBeenCalled();
+        });
     });
 
-    test('uploads multiple files: waits for every promise in Promise.all before closing', async () => {
-        const file1 = new File(['one'], 'photo1.jpg', { type: 'image/jpeg' });
-        const file2 = new File(['two'], 'photo2.jpg', { type: 'image/jpeg' });
-        const photo1 = { ...mockPhoto, uuid: 'uuid-1', title: 'Awesome Title'};
-        const photo2 = { ...mockPhoto, uuid: 'uuid-2', title: 'Awesome Title 2'};
+    describe('closing', () => {
+        test('closes with the close button', async () => {
+            const user = userEvent.setup();
+            renderUploadModal();
 
+            await user.click(screen.getByRole('button', {name: 'Close'}));
 
-        // Deliberately resolve out of order to prove Promise.all waits for both,
-        // regardless of which underlying request finishes first.
-        let promiseResolver1: (value: PhotographDTO) => void;
-        const firstCallPromise = new Promise<PhotographDTO>((resolve) => {
-            promiseResolver1 = resolve;
+            expect(mockOnClose).toHaveBeenCalledTimes(1);
         });
 
-        mockedPostPhotograph
-            .mockImplementationOnce(() => firstCallPromise)
-            .mockImplementationOnce(() => Promise.resolve(photo2));
+        test('closes when the overlay is clicked', async () => {
+            const user = userEvent.setup();
+            renderUploadModal();
 
-        render(
-            <AuthProvider>
-                <PhotographUploadModal onClose={mockOnClose} />
-            </AuthProvider>
-        );
+            await user.click(screen.getByTestId('modal-overlay'));
 
-        const titleInput = screen.getByRole('textbox', { name: /title/i });
-        await userEvent.type(titleInput, 'Awesome Title');
-
-        const fileInput = screen.getByTestId('muli-file-upload-input-element');
-        await userEvent.upload(fileInput, [file1, file2]);
-
-        const uploadButton = screen.getByRole('button', { name: 'Upload' });
-        await userEvent.click(uploadButton);
-
-        await waitFor(() => {
-            expect(mockedPostPhotograph).toHaveBeenCalledTimes(2);
+            expect(mockOnClose).toHaveBeenCalledTimes(1);
         });
 
-        expect(mockOnClose).not.toHaveBeenCalled();
-        expect(mockRefreshPhotographs).not.toHaveBeenCalled();
+        test('closes with the Escape key', () => {
+            renderUploadModal();
 
-        promiseResolver1!(photo1);
+            fireEvent.keyDown(document, {key: 'Escape', code: 'Escape'});
 
-        // One refresh for the whole batch, not one per file.
-        await waitFor(() => {
-            expect(mockRefreshPhotographs).toHaveBeenCalledTimes(1);
+            expect(mockOnClose).toHaveBeenCalledTimes(1);
         });
 
-        // First file keeps the plain title, subsequent files get an index suffix.
-        expect(mockedPostPhotograph).toHaveBeenNthCalledWith(
-            1,
-            expect.objectContaining({ title: 'Awesome Title', file: file1 })
-        );
-        expect(mockedPostPhotograph).toHaveBeenNthCalledWith(
-            2,
-            expect.objectContaining({ title: 'Awesome Title 1', file: file2 })
-        );
+        test('does not close when clicking inside the modal content', async () => {
+            const user = userEvent.setup();
+            renderUploadModal();
 
-        expect(mockOnClose).toHaveBeenCalledTimes(1);
-    });
+            await user.click(screen.getByRole('heading', {name: 'Upload'}));
+            await user.click(descriptionInput());
 
-    test('shows an error and does not close the modal when upload fails', async () => {
-        mockedPostPhotograph.mockRejectedValueOnce(createAxiosError({ message: 'Upload failed on server'}));
-
-        render(
-            <AuthProvider>
-                <PhotographUploadModal onClose={mockOnClose} />
-            </AuthProvider>
-        );
-
-        const titleInput = screen.getByRole('textbox', { name: /title/i });
-        await userEvent.type(titleInput, 'My Trip');
-
-        const file = new File(['content'], 'photo.jpg', { type: 'image/jpeg' });
-        const fileInput = screen.getByTestId('muli-file-upload-input-element');
-        await userEvent.upload(fileInput, file);
-
-        const uploadButton = screen.getByRole('button', { name: 'Upload' });
-        await userEvent.click(uploadButton);
-
-        await waitFor(() => {
-            const error = screen.getByText('Upload failed on server');
-            expect(error).toBeInTheDocument();
+            expect(mockOnClose).not.toHaveBeenCalled();
         });
-
-        expect(mockOnClose).not.toHaveBeenCalled();
-    });
-
-    test('refreshes the photographs when one of several uploads fails, since the others may have been stored', async () => {
-        mockedPostPhotograph
-            .mockResolvedValueOnce(mockPhoto)
-            .mockRejectedValueOnce(createAxiosError({ message: 'Upload failed on server'}));
-
-        render(
-            <AuthProvider>
-                <PhotographUploadModal onClose={mockOnClose} />
-            </AuthProvider>
-        );
-
-        await userEvent.type(screen.getByRole('textbox', { name: /title/i }), 'My Trip');
-        await userEvent.upload(screen.getByTestId('muli-file-upload-input-element'), [
-            new File(['one'], 'photo1.jpg', { type: 'image/jpeg' }),
-            new File(['two'], 'photo2.jpg', { type: 'image/jpeg' }),
-        ]);
-        await userEvent.click(screen.getByRole('button', { name: 'Upload' }));
-
-        await waitFor(() => {
-            expect(screen.getByText('Upload failed on server')).toBeInTheDocument();
-            expect(mockRefreshPhotographs).toHaveBeenCalledTimes(1);
-        });
-        expect(mockOnClose).not.toHaveBeenCalled();
     });
 });
+
+const renderUploadModal = () => {
+    return render(<PhotographUploadModal onClose={mockOnClose}/>);
+};
+
+const titleInput = (): HTMLElement => screen.getByRole('textbox', {name: 'Title'});
+const descriptionInput = (): HTMLElement => screen.getByRole('textbox', {name: 'Description'});
+const fileInput = (): HTMLElement => screen.getByTestId('muli-file-upload-input-element');
+const uploadButton = (): HTMLElement => screen.getByRole('button', {name: 'Upload'});
+
+const createFile = (name: string): File => {
+    return new File([name], name, {type: 'image/jpeg'});
+};
+
+function deferred<T>() {
+    let resolve!: (value: T) => void;
+    const promise = new Promise<T>((res) => {
+        resolve = res;
+    });
+    return {promise, resolve};
+}

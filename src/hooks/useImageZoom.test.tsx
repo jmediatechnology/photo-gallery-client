@@ -5,14 +5,16 @@ import {useImageZoom, type UseImageZoomResult} from './useImageZoom';
 function Harness({
                      options,
                      onResult,
+                     attachContainerRef = true,
                  }: {
     options?: Parameters<typeof useImageZoom>[0];
     onResult: (useImageZoomResult: UseImageZoomResult) => void;
+    attachContainerRef?: boolean;
 }) {
     const { containerRef, containerProps, imageStyle } = useImageZoom(options);
     onResult({ containerRef, containerProps, imageStyle });
     return (
-        <div data-testid="container" ref={containerRef} {...containerProps}>
+        <div data-testid="container" ref={attachContainerRef ? containerRef : undefined} {...containerProps}>
             <img data-testid="image" alt="" style={imageStyle} />
         </div>
     );
@@ -193,5 +195,51 @@ describe('useImageZoom', () => {
         }
 
         expect(extractScale(latestImageZoomResult.imageStyle.transform)).toBe(5);
+    });
+
+    it('respects custom minScale, maxScale and sensitivity', () => {
+        const { getByTestId } = render(
+            <Harness options={{ minScale: 2, maxScale: 3, sensitivity: 0.01 }} onResult={onResult} />
+        );
+        const container = getByTestId('container');
+
+        expect(extractScale(latestImageZoomResult.imageStyle.transform)).toBe(2);
+
+        act(() => {
+            fireEvent.wheel(container, { deltaY: -50, clientX: 100, clientY: 100 });
+        });
+
+        expect(extractScale(latestImageZoomResult.imageStyle.transform)).toBeCloseTo(2.5);
+        expect(latestImageZoomResult.containerProps.style.cursor).toBe('zoom-in');
+
+        act(() => {
+            fireEvent.wheel(container, { deltaY: -1000, clientX: 100, clientY: 100 });
+        });
+
+        expect(extractScale(latestImageZoomResult.imageStyle.transform)).toBe(3);
+        expect(latestImageZoomResult.containerProps.style.cursor).toBe('zoom-out');
+    });
+
+    it('does not zoom when containerRef is not attached to an element', () => {
+        const { getByTestId } = render(<Harness attachContainerRef={false} onResult={onResult} />);
+        const container = getByTestId('container');
+
+        let notPrevented: boolean;
+        act(() => {
+            notPrevented = fireEvent.wheel(container, { deltaY: -500, clientX: 150, clientY: 50 });
+        });
+
+        expect(notPrevented!).toBe(true);
+        expect(extractScale(latestImageZoomResult.imageStyle.transform)).toBe(1);
+    });
+
+    it('stops listening to the wheel after unmounting', () => {
+        const { getByTestId, unmount } = render(<Harness onResult={onResult} />);
+        const container = getByTestId('container');
+        const removeEventListener = vi.spyOn(container, 'removeEventListener');
+
+        unmount();
+
+        expect(removeEventListener).toHaveBeenCalledWith('wheel', expect.any(Function));
     });
 });

@@ -38,16 +38,6 @@ export function useImageZoom({
         [minScale, maxScale]
     );
 
-    const convertMouseClientCoordinatesToOriginXYOffsetPercentages = useCallback((clientX: number, clientY: number) => {
-        const rect: DOMRect|undefined = containerRef.current?.getBoundingClientRect();
-        if (!rect) return DEFAULT_TRANSFORM_ORIGIN;
-
-        return {
-            x: ((clientX - rect.left) / rect.width) * 100,
-            y: ((clientY - rect.top) / rect.height) * 100,
-        };
-    }, []);
-
     const reset = useCallback(() => {
         setScale(minScale);
         setTransformOriginCoordinates(DEFAULT_TRANSFORM_ORIGIN);
@@ -67,7 +57,7 @@ export function useImageZoom({
             setScale((prevScale) => {
                 const nextScale = clamp(prevScale - e.deltaY * sensitivity);
                 if (nextScale !== minScale) {
-                    setTransformOriginCoordinates(convertMouseClientCoordinatesToOriginXYOffsetPercentages(e.clientX, e.clientY));
+                    setTransformOriginCoordinates(convertMouseClientCoordinatesToOriginXYOffsetPercentages(el, e.clientX, e.clientY));
                 }
 
                 return nextScale;
@@ -76,14 +66,14 @@ export function useImageZoom({
 
         el.addEventListener('wheel', handleWheel, { passive: false });
         return () => el.removeEventListener('wheel', handleWheel);
-    }, [clamp, sensitivity, convertMouseClientCoordinatesToOriginXYOffsetPercentages, minScale]);
+    }, [clamp, sensitivity, minScale]);
 
     const handleMouseMove = useCallback(
         (e: MouseEvent) => {
             if (scale === minScale) return;
-            setTransformOriginCoordinates(convertMouseClientCoordinatesToOriginXYOffsetPercentages(e.clientX, e.clientY));
+            setTransformOriginCoordinates(convertMouseClientCoordinatesToOriginXYOffsetPercentages(e.currentTarget, e.clientX, e.clientY));
         },
-        [scale, minScale, convertMouseClientCoordinatesToOriginXYOffsetPercentages]
+        [scale, minScale]
     );
 
     return {
@@ -101,3 +91,21 @@ export function useImageZoom({
         },
     };
 }
+
+/*
+ * Takes the element the event was registered on instead of reading
+ * containerRef: both callers already hold that element, so there is no
+ * "container not attached" case to handle here.
+ */
+const convertMouseClientCoordinatesToOriginXYOffsetPercentages = (
+    container: Element,
+    clientX: number,
+    clientY: number
+): coordinatesType => {
+    const rect: DOMRect = container.getBoundingClientRect();
+
+    return {
+        x: ((clientX - rect.left) / rect.width) * 100,
+        y: ((clientY - rect.top) / rect.height) * 100,
+    };
+};

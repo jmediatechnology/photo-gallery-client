@@ -24,11 +24,21 @@ const PhotographItem = ({
 
     const { roles } = useAuth();
 
+    const isAdmin = Boolean(roles?.includes('ROLE_ADMIN'));
+
+    const selectOnEnter = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (event.key !== 'Enter' || event.target !== event.currentTarget) {
+            return;
+        }
+
+        onSelect(photograph);
+    };
+
     return (
         <div
             className={`photo-gallery-item${isSelected ? ' photo-gallery-item--selected' : ''}`}
             tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && onSelect(photograph)}
+            onKeyDown={selectOnEnter}
             {...{[PHOTOGRAPH_UUID_ATTRIBUTE]: photograph.uuid}}
         >
             <img
@@ -45,10 +55,24 @@ const PhotographItem = ({
                 )}
             </div>
             <div className="photo-gallery-actions">
-                { roles?.includes('ROLE_ADMIN')
-                    ? <><button onClick={() => onSelectForDelete(photograph)}><FaTrashAlt /></button><button onClick={() => onSelectForEdit(photograph)}><MdModeEdit /></button></>
-                    : <></>
-                }
+                {isAdmin && (
+                    <>
+                        <button
+                            type="button"
+                            aria-label={`Delete ${photograph.title}`}
+                            onClick={() => onSelectForDelete(photograph)}
+                        >
+                            <FaTrashAlt />
+                        </button>
+                        <button
+                            type="button"
+                            aria-label={`Edit ${photograph.title}`}
+                            onClick={() => onSelectForEdit(photograph)}
+                        >
+                            <MdModeEdit />
+                        </button>
+                    </>
+                )}
             </div>
         </div>
     );

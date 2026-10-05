@@ -11,6 +11,12 @@ export const PHOTOGRAPH_UUID_ATTRIBUTE = 'data-photograph-uuid';
 
 const LEFT_MOUSE_BUTTON = 0;
 
+/*
+ * Starting value for the point refs. It is never read: onMouseDown overwrites
+ * both points before it sets isSelecting, and only a selection reads them.
+ */
+const CONTENT_ORIGIN: Point = {x: 0, y: 0};
+
 interface RectangularSelectionOptions {
     /**
      * Receives the uuids covered by the rubber band: an empty set on mousedown,
@@ -42,8 +48,8 @@ export const useRectangularSelection = (
     {onSelectionChange}: RectangularSelectionOptions
 ): RectangularSelection => {
     const containerRef = React.useRef<HTMLDivElement | null>(null);
-    const startPointRef = React.useRef<Point | null>(null);
-    const latestPointRef = React.useRef<Point | null>(null);
+    const startPointRef = React.useRef<Point>(CONTENT_ORIGIN);
+    const latestPointRef = React.useRef<Point>(CONTENT_ORIGIN);
     const photographRectanglesRef = React.useRef<RectangleWithUuid[]>([]);
     const animationFrameRef = React.useRef<number | null>(null);
 
@@ -80,26 +86,25 @@ export const useRectangularSelection = (
             return;
         }
 
-        const container = containerRef.current;
-        if (!container) {
-            return;
-        }
-
         const applyLatestPoint = (): void => {
             animationFrameRef.current = null;
 
-            const startPoint = startPointRef.current;
-            const latestPoint = latestPointRef.current;
-            if (!startPoint || !latestPoint) {
-                return;
-            }
-
-            const rectangle = createRectangle(startPoint, latestPoint);
+            const rectangle = createRectangle(startPointRef.current, latestPointRef.current);
             setSelectionRectangle(rectangle);
             onSelectionChange(findOverlappingUuids(rectangle, photographRectanglesRef.current));
         };
 
+        /*
+         * The container is read per move rather than once when the effect runs:
+         * if it is detached mid-drag, moves are ignored, but the mouseup and blur
+         * listeners below are still attached and can end the selection.
+         */
         const handleMouseMove = (event: MouseEvent): void => {
+            const container = containerRef.current;
+            if (!container) {
+                return;
+            }
+
             latestPointRef.current = toContentPoint(container, event.clientX, event.clientY);
 
             if (animationFrameRef.current !== null) {
@@ -139,7 +144,11 @@ export const useRectangularSelection = (
 };
 
 const isWithinPhotograph = (target: EventTarget | null): boolean => {
-    if (!(target instanceof HTMLElement)) {
+    /*
+     * Element, not HTMLElement: the icons inside a photograph's buttons are SVG
+     * elements, and a mousedown on one must not start a selection.
+     */
+    if (!(target instanceof Element)) {
         return false;
     }
 

@@ -1,176 +1,96 @@
-import {render, screen} from "@testing-library/react";
+import {fireEvent, render, screen} from "@testing-library/react";
+import {afterEach, describe, expect, test, vi} from "vitest";
 import {ThumbnailFooter} from "./ThumbnailFooter.tsx";
 import {CircularArray} from "../../data-structures/CircularArray.ts";
 import type {PhotographDTO} from "../../types";
-import {vi} from "vitest";
 
-const mockedPhotographs: CircularArray<PhotographDTO> = CircularArray.from([
-    {
-        uuid: '1',
-        title: 'Alpha',
-        description: 'Description of Alpha',
-        filePath: '/images/alpha.jpg',
-        createdAt: '2025-10-01 01:00:00',
-        updatedAt: '2025-10-01 01:00:00',
-    },
-    {
-        uuid: '2',
-        title: 'Bravo',
-        description: 'Description of Bravo',
-        filePath: '/images/bravo.jpg',
-        createdAt: '2025-10-02 02:00:00',
-        updatedAt: '2025-10-02 02:00:00',
-    },
-    {
-        uuid: '3',
-        title: 'Charlie',
-        description: 'Description of Charlie',
-        filePath: '/images/charlie.jpg',
-        createdAt: '2025-10-03 03:00:00',
-        updatedAt: '2025-10-03 03:00:00',
-    },
-    {
-        uuid: '4',
-        title: 'Delta',
-        description: 'Description of Delta',
-        filePath: '/images/delta.jpg',
-        createdAt: '2025-10-04 04:00:00',
-        updatedAt: '2025-10-04 04:00:00',
-    },
-    {
-        uuid: '5',
-        title: 'Echo',
-        description: 'Description of Echo',
-        filePath: '/images/echo.jpg',
-        createdAt: '2025-10-05 05:00:00',
-        updatedAt: '2025-10-05 05:00:00',
-    },
-    {
-        uuid: '6',
-        title: 'Foxtrot',
-        description: 'Description of Foxtrot',
-        filePath: '/images/foxtrot.jpg',
-        createdAt: '2025-10-06 06:00:00',
-        updatedAt: '2025-10-06 06:00:00',
-    },
-    {
-        uuid: '7',
-        title: 'Golf',
-        description: 'Description of Golf',
-        filePath: '/images/golf.jpg',
-        createdAt: '2025-10-07 07:00:00',
-        updatedAt: '2025-10-07 07:00:00',
-    },
-    {
-        uuid: '8',
-        title: 'Hotel',
-        description: 'Description of Hotel',
-        filePath: '/images/hotel.jpg',
-        createdAt: '2025-10-08 08:00:00',
-        updatedAt: '2025-10-08 08:00:00',
-    },
-    {
-        uuid: '9',
-        title: 'India',
-        description: 'Description of India',
-        filePath: '/images/india.jpg',
-        createdAt: '2025-10-09 09:00:00',
-        updatedAt: '2025-10-09 09:00:00',
-    },
-]);
+vi.mock("../../api/config.ts", () => ({
+    api: {
+        url: (path: string) => `https://test.com${path}`
+    }
+}));
 
-const mockOnSelect = vi.fn<() => void>();
+const TITLES = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India'];
 
+const createPhotograph = (title: string, index: number): PhotographDTO => ({
+    uuid: String(index + 1),
+    title,
+    description: `Description of ${title}`,
+    filePath: `/images/${title.toLowerCase()}.jpg`,
+    createdAt: `2025-10-0${index + 1} 0${index + 1}:00:00`,
+    updatedAt: `2025-10-0${index + 1} 0${index + 1}:00:00`,
+});
+
+const NINE_PHOTOGRAPHS: CircularArray<PhotographDTO> = CircularArray.from(TITLES.map(createPhotograph));
+
+const onSelect = vi.fn<(photograph: PhotographDTO) => void>();
 
 describe('ThumbnailFooter', () => {
 
+    afterEach(() => {
+        vi.clearAllMocks();
+    });
+
     test('renders thumbnail footer div', () => {
-        render(<ThumbnailFooter photographs={mockedPhotographs} offset={0} onSelect={mockOnSelect} />);
-        expect(screen.queryByTestId('thumbnail-footer')).toBeInTheDocument();
+        renderThumbnailFooter(NINE_PHOTOGRAPHS, 0);
+
+        expect(screen.getByTestId('thumbnail-footer')).toBeInTheDocument();
     });
 
+    describe('window of seven thumbnails around the current photograph', () => {
+        test.each([
+            ['in the middle', 3, ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf']],
+            ['in the middle, slid one to the right', 4, ['Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel']],
+            ['at the first photograph, wrapping to the end', 0, ['Golf', 'Hotel', 'India', 'Alpha', 'Bravo', 'Charlie', 'Delta']],
+            ['at the second photograph, wrapping to the end', 1, ['Hotel', 'India', 'Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo']],
+            ['at the last photograph, wrapping to the start', 8, ['Foxtrot', 'Golf', 'Hotel', 'India', 'Alpha', 'Bravo', 'Charlie']],
+        ])('shows the right thumbnails %s', (_: string, offset: number, expectedTitles: string[]) => {
+            renderThumbnailFooter(NINE_PHOTOGRAPHS, offset);
 
-    test('renders 3 images on the left, 1 current offset image, and 3 next images when offset fits the middle', () => {
-        render(<ThumbnailFooter photographs={mockedPhotographs} offset={3} onSelect={mockOnSelect} />);
-
-        expect(screen.queryByRole('img', {name: 'Alpha'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Bravo'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Charlie'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Delta'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Echo'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Foxtrot'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Golf'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Hotel'})).not.toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'India'})).not.toBeInTheDocument();
+            expect(thumbnailTitles()).toEqual(expectedTitles);
+        });
     });
 
-    test('renders image range containing 3 left, 1 current, and 3 next images when offset fits the middle and slides by one to the right', () => {
-        render(<ThumbnailFooter photographs={mockedPhotographs} offset={4} onSelect={mockOnSelect} />);
+    describe('fewer photographs than the window', () => {
+        test('shows every photograph once', () => {
+            const threePhotographs = CircularArray.from(TITLES.slice(0, 3).map(createPhotograph));
 
-        expect(screen.queryByRole('img', {name: 'Alpha'})).not.toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Bravo'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Charlie'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Delta'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Echo'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Foxtrot'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Golf'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Hotel'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'India'})).not.toBeInTheDocument();
+            renderThumbnailFooter(threePhotographs, 0);
+
+            expect(thumbnailTitles()).toHaveLength(3);
+            expect(new Set(thumbnailTitles())).toEqual(new Set(['Alpha', 'Bravo', 'Charlie']));
+        });
+
+        test('shows no thumbnails when there are no photographs', () => {
+            renderThumbnailFooter(CircularArray.from([] as PhotographDTO[]), 0);
+
+            expect(screen.getByTestId('thumbnail-footer')).toBeEmptyDOMElement();
+        });
     });
 
-    test('renders 3 end images, 1 current image, and 3 next images when offset is zero', () => {
-        render(<ThumbnailFooter photographs={mockedPhotographs} offset={0} onSelect={mockOnSelect} />);
+    describe('thumbnails', () => {
+        test('load the photograph file lazily', () => {
+            renderThumbnailFooter(NINE_PHOTOGRAPHS, 3);
 
-        expect(screen.queryByRole('img', {name: 'Alpha'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Bravo'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Charlie'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Delta'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Echo'})).not.toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Foxtrot'})).not.toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Golf'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Hotel'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'India'})).toBeInTheDocument();
+            const thumbnail = screen.getByRole('img', {name: 'Delta'});
+            expect(thumbnail).toHaveAttribute('src', 'https://test.com/images/delta.jpg');
+            expect(thumbnail).toHaveAttribute('loading', 'lazy');
+        });
+
+        test('select their photograph when clicked', () => {
+            renderThumbnailFooter(NINE_PHOTOGRAPHS, 3);
+
+            fireEvent.click(screen.getByRole('img', {name: 'Bravo'}));
+
+            expect(onSelect).toHaveBeenCalledExactlyOnceWith(NINE_PHOTOGRAPHS[1]);
+        });
     });
+});
 
-    test('renders 3 end images, 1 current image, and 3 next images when offset is one', () => {
-        render(<ThumbnailFooter photographs={mockedPhotographs} offset={1} onSelect={mockOnSelect} />);
+const renderThumbnailFooter = (photographs: CircularArray<PhotographDTO>, offset: number) => {
+    return render(<ThumbnailFooter photographs={photographs} offset={offset} onSelect={onSelect}/>);
+};
 
-        expect(screen.queryByRole('img', {name: 'Alpha'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Bravo'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Charlie'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Delta'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Echo'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Foxtrot'})).not.toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Golf'})).not.toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Hotel'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'India'})).toBeInTheDocument();
-    });
-
-    test('renders 3 end images, 1 current image, and 3 next images when offset is one', () => {
-        render(<ThumbnailFooter photographs={mockedPhotographs} offset={1} onSelect={mockOnSelect} />);
-
-        expect(screen.queryByRole('img', {name: 'Alpha'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Bravo'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Charlie'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Delta'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Echo'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Foxtrot'})).not.toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Golf'})).not.toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Hotel'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'India'})).toBeInTheDocument();
-    });
-
-    test('renders 3 first images, 1 current, and 3 next images when offset is the last', () => {
-        render(<ThumbnailFooter photographs={mockedPhotographs} offset={mockedPhotographs.length - 1} onSelect={mockOnSelect} />);
-
-        expect(screen.queryByRole('img', {name: 'Alpha'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Bravo'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Charlie'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Delta'})).not.toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Echo'})).not.toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Foxtrot'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Golf'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'Hotel'})).toBeInTheDocument();
-        expect(screen.queryByRole('img', {name: 'India'})).toBeInTheDocument();
-    });
-})
+const thumbnailTitles = (): string[] => {
+    return screen.queryAllByRole('img').map((thumbnail: HTMLElement) => thumbnail.getAttribute('alt') ?? '');
+};

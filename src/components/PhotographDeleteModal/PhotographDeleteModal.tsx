@@ -22,7 +22,7 @@ export const PhotographDeleteModal: React.FC<PhotographModalProps> = ({ photo, o
 
     const handleDelete = (photograph: PhotographDTO) => {
 
-        if (!token || isBusy) {
+        if (!token) {
             return;
         }
 
