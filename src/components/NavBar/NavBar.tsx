@@ -6,6 +6,7 @@ import {LoginModal} from "../LoginModal/LoginModal.tsx";
 import {useAuth} from "../../context/AuthContext.tsx";
 import {PhotographUploadModal} from "../PhotographUploadModal/PhotographUploadModal.tsx";
 import {PhotographSelectionDeleteModal} from "../PhotographSelectionDeleteModal/PhotographSelectionDeleteModal.tsx";
+import {PhotographSelectionDownloadLink} from "../PhotographSelectionDownloadLink/PhotographSelectionDownloadLink.tsx";
 import {usePhotographSelection} from "../../context/PhotographSelectionContext.tsx";
 import {useDeleteKeyboardKey} from "../../hooks/useDeleteKeyboardKey.tsx";
 import {PhotographTitleSearch} from "../PhotographTitleSearch/PhotographTitleSearch.tsx";
@@ -49,6 +50,7 @@ export const NavBar = () => {
                             <span className="navbar-selection-count" data-testid="navbar-selection-count">
                                 {amountOfSelectedPhotographs} selected
                             </span>
+                            <PhotographSelectionDownloadLink photographs={selectedPhotographs} />
                             {isAdmin && (
                                 <a
                                     href="#"

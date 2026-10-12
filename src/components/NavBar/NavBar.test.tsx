@@ -185,6 +185,26 @@ describe('NavBar', () => {
             expect(screen.getByTestId('navbar-selection-count')).toHaveTextContent('2 selected');
         });
 
+        test.each([
+            ['anonymous visitors', ANONYMOUS],
+            ['users who are not admin', USER],
+            ['admins', ADMIN],
+        ])('offers %s a download of the selection', (_: string, auth: typeof ANONYMOUS | typeof USER | typeof ADMIN) => {
+            mockedUseAuth.mockReturnValue(auth);
+            selectPhotographs([SUNSET, NIGHT]);
+
+            render(<NavBar />);
+
+            expect(screen.getByRole('link', {name: 'Download selected'}))
+                .toHaveAttribute('href', expect.stringMatching(/\/photographs\/download\?uuids=1,2$/));
+        });
+
+        test('shows no download link when nothing is selected', () => {
+            render(<NavBar />);
+
+            expect(screen.queryByRole('link', {name: 'Download selected'})).not.toBeInTheDocument();
+        });
+
         test('hides the delete link from users who are not admin', () => {
             mockedUseAuth.mockReturnValue(USER);
             selectPhotographs([SUNSET]);
