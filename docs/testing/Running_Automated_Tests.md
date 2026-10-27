@@ -2,9 +2,15 @@
 
 Multiple ways to run tests:
 
+Build (test) container, run tests, and remove the (test) container after testing.    
 ```
 docker compose run --rm react-test
+```
+
+Run all tests outside docker: 
+```
 npm run test
+npx vitest run
 ```
 
 Run one test file:

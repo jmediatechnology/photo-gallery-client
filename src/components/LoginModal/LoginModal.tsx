@@ -17,7 +17,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({onClose}) => {
 
     const { setToken } = useAuth();
 
-    const handleLogin = () => {
+    const areCredentialsFilled = username.trim() !== '' && password !== '';
+
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        if (!areCredentialsFilled || isBusy) {
+            return;
+        }
+
         setIsBusy(true);
 
         postLogin({
@@ -35,47 +43,62 @@ export const LoginModal: React.FC<LoginModalProps> = ({onClose}) => {
 
     return (
         <div className="modal-overlay-login" onClick={onClose} data-testid="modal-overlay">
-            <div className="modal-content-login background-black padding-32" onClick={(e) => e.stopPropagation()}>
-                <div className="modal-header">
-                    <h2>Login</h2>
-                    <button
-                        className="modal-close"
-                        onClick={onClose}
-                        aria-label="Close"
-                    >
-                        &times;
-                    </button>
-                </div>
-                <div className="modal-field">
-                    <label htmlFor="username" className="">Username</label>
-                    <input
-                        type="text"
-                        id="username"
-                        className=""
-                        placeholder="Enter your username"
-                        onChange={(e) => setUsername(e.target.value)}
-                        autoFocus={true}
-                    />
-                </div>
-                <div className="modal-field">
-                    <label htmlFor="password" className="">Password</label>
-                    <input
-                        type="password"
-                        id="password"
-                        className=""
-                        placeholder="Enter your password"
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </div>
+            <form onSubmit={handleSubmit} aria-label="Login" noValidate>
+                <div className="modal-content-login background-black padding-32" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                        <h2>Login</h2>
+                        <button
+                            type="button"
+                            className="modal-close"
+                            onClick={onClose}
+                            aria-label="Close"
+                        >
+                            &times;
+                        </button>
+                    </div>
+                    <div className="modal-field">
+                        <label htmlFor="username" className="">Username</label>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            className=""
+                            placeholder="Enter your username"
+                            autoComplete="username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            autoFocus={true}
+                        />
+                    </div>
+                    <div className="modal-field">
+                        <label htmlFor="password" className="">Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            className=""
+                            placeholder="Enter your password"
+                            autoComplete="current-password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                    </div>
 
-                {error && (
-                    <div style={{ color: "red", fontSize: "14px" }}>{error}</div>
-                )}
+                    {error && (
+                        <div style={{ color: "red", fontSize: "14px" }}>{error}</div>
+                    )}
 
-                <div className="modal-field">
-                    <button className="" onClick={handleLogin} disabled={isBusy}>Login</button>
+                    <div className="modal-field">
+                        <button
+                            type="submit"
+                            className=""
+                            disabled={!areCredentialsFilled || isBusy}
+                        >
+                            Login
+                        </button>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
     );
 };
