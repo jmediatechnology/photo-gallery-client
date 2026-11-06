@@ -19,6 +19,9 @@ export const PhotoGallery = () => {
     const [selectedPhotoToBeDeleted, setSelectedPhotoToBeDeleted] = React.useState<PhotographDTO | null>(null);
     const [selectedPhotoToBeEdited, setSelectedPhotoToBeEdited] = React.useState<PhotographDTO | null>(null);
 
+    // Arrow keys move the caret in the edit modal. So gallery navigation must not react to them while it is open.
+    const isEditModalOpen: boolean = selectedPhotoToBeEdited !== null;
+
     const {selectedPhotographUuids, replaceSelection} = usePhotographSelection();
     const {
         containerRef,
@@ -33,7 +36,8 @@ export const PhotoGallery = () => {
 
     useKeyboardNavigation(
         () => setSelectedPhoto(photographs.getNext(selectedPhotoIndex)),
-        () => setSelectedPhoto(photographs.getPrev(selectedPhotoIndex))
+        () => setSelectedPhoto(photographs.getPrev(selectedPhotoIndex)),
+        {enabled: !isEditModalOpen}
     );
 
     if (isLoading) {

@@ -90,4 +90,40 @@ describe("useKeyboardNavigation", () => {
         expect(firstOnPrev).not.toHaveBeenCalled();
         expect(secondOnPrev).toHaveBeenCalledOnce();
     });
+    test("does not register listeners when disabled", () => {
+        const addEventListenerSpy = vi.spyOn(window, "addEventListener");
+
+        renderHook(() => useKeyboardNavigation(onNext, onPrev, { enabled: false }));
+
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft" }));
+
+        expect(addEventListenerSpy).not.toHaveBeenCalledWith("keydown", expect.any(Function));
+        expect(onNext).not.toHaveBeenCalled();
+        expect(onPrev).not.toHaveBeenCalled();
+    });
+
+    test("removes listeners when disabled and restores them when re-enabled", () => {
+        const { rerender } = renderHook(
+            ({ enabled }) => useKeyboardNavigation(onNext, onPrev, { enabled }),
+            { initialProps: { enabled: true } }
+        );
+
+        rerender({ enabled: false });
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+        expect(onNext).not.toHaveBeenCalled();
+
+        rerender({ enabled: true });
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+        expect(onNext).toHaveBeenCalledOnce();
+    });
+
+    test("does not remove anything on unmount when disabled", () => {
+        const removeEventListenerSpy = vi.spyOn(window, "removeEventListener");
+
+        const { unmount } = renderHook(() => useKeyboardNavigation(onNext, onPrev, { enabled: false }));
+        unmount();
+
+        expect(removeEventListenerSpy).not.toHaveBeenCalledWith("keydown", expect.any(Function));
+    });
 });

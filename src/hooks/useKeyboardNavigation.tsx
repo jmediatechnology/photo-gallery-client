@@ -1,10 +1,18 @@
 import * as React from "react";
 
+interface UseKeyboardNavigationOptions {
+    enabled?: boolean;
+}
+
 export function useKeyboardNavigation(
     onNext: () => void,
-    onPrev: () => void
+    onPrev: () => void,
+    {enabled = true}: UseKeyboardNavigationOptions = {}
 ) {
     React.useEffect(() => {
+        if (!enabled) {
+            return;
+        }
 
         const handleNext = (e: KeyboardEvent) => {
             if (e.key === 'ArrowRight') onNext();
@@ -21,5 +29,5 @@ export function useKeyboardNavigation(
             window.removeEventListener('keydown', handleNext);
             window.removeEventListener('keydown', handlePrev);
         }
-    }, [onNext, onPrev]);
+    }, [onNext, onPrev, enabled]);
 }

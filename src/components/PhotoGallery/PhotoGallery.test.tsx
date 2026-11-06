@@ -277,6 +277,23 @@ describe('PhotoGallery', () => {
 
             expect(screen.queryByTestId('edit-modal')).not.toBeInTheDocument();
         });
+
+        test('keyboard navigation is enabled while the edit modal is closed', () => {
+            render(<PhotoGallery/>);
+
+            expect(mockedUseKeyboardNavigation.mock.lastCall![2]).toEqual({enabled: true});
+        });
+
+        test('disables keyboard navigation while open and restores it on close', () => {
+            render(<PhotoGallery/>);
+            fireEvent.click(screen.getByRole('button', {name: 'Edit Night'}));
+
+            expect(mockedUseKeyboardNavigation.mock.lastCall![2]).toEqual({enabled: false});
+
+            act(() => lastPropsOf(PhotographEditModal).onClose());
+
+            expect(mockedUseKeyboardNavigation.mock.lastCall![2]).toEqual({enabled: true});
+        });
     });
 });
 
